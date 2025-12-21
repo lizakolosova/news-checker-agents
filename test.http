@@ -1,0 +1,10 @@
+### @timeout 120
+POST http://127.0.0.1:8000/fact-check/article
+Content-Type: application/json
+
+{
+  "article_id": "belgium_gdp_test",
+  "title": "Belgium Economy",
+  "text": "Belgium's GDP grew by 1.5% in 2023 according to official statistics.",
+  "max_claims": 1
+}
