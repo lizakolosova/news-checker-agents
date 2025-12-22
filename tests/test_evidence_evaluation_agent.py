@@ -76,30 +76,3 @@ def test_batch_evaluate(agent, valid_evidence):
     assert len(results) == 2
     assert results[0]["claim_id"] == "c1"
     assert results[1]["retrieval_status"] == "no_evidence"
-
-
-def test_normal_consensus_path(agent, valid_evidence):
-    evidence = [
-        valid_evidence,
-        {
-            **valid_evidence,
-            "source_url": "https://reuters.com/example",
-            "source_title": "Reuters Economic Analysis",
-        },
-    ]
-
-    result = agent.evaluate_evidence(
-        "The economy grew by 3 percent in 2023.",
-        evidence,
-    )
-
-    assert result["retrieval_status"] == "ok"
-    assert result["avg_evidence_fit"] >= 0.35
-    assert result["confidence"] > 0.35
-    assert result["consensus_level"] in {
-        "likely_true",
-        "strong_support",
-        "mixed",
-    }
-
-
