@@ -25,11 +25,9 @@ class ClaimExtractionConfig:
     sub_claim_confidence_multiplier: float = 0.8
     log_level: str = "INFO"
 
-    # Verifiability gating
     min_verifiability: float = 0.35
     drop_unverifiable: bool = True
 
-    # Vague claim suppression
     drop_vague_referents: bool = True
     vague_referents: Tuple[str, ...] = (
         "this", "that", "these", "those", "it", "they", "there", "such"
@@ -40,17 +38,14 @@ class ClaimExtractionConfig:
 class ResearchConfig:
     """Configuration for Research Agent (PRODUCTION MODE)."""
 
-    # Search settings
-    max_results: int = 5  # Sources per claim
-    per_query_results: int = 5  # Results per query
+    max_results: int = 5
+    per_query_results: int = 5
     search_api_key: str = os.getenv("SERPER_API_KEY", "")
     groq_api_key: str = os.getenv("GROQ_API_KEY", "")
 
-    # Relevance filtering (STRICTER)
-    min_relevance: float = 0.20  # Raised from 0.15
-    keep_top_k_if_all_filtered: int = 2  # Reduced from 3
+    min_relevance: float = 0.20
+    keep_top_k_if_all_filtered: int = 2
 
-    # Authority domain patterns
     prefer_authority_domains: bool = True
     authority_domain_patterns: Tuple[str, ...] = (
         r"\.gov(\.|$)",
@@ -61,7 +56,6 @@ class ResearchConfig:
         r"\.eu(\.|$)",
     )
 
-    # Multilateral/international organizations
     multilateral_domains: Tuple[str, ...] = (
         "who.int",
         "imf.org",
@@ -72,18 +66,16 @@ class ResearchConfig:
         "ec.europa.eu",
     )
 
-    # Low-signal domain blacklist (EXPANDED)
     low_signal_domains: Tuple[str, ...] = (
         "facebook.com",
         "twitter.com",
         "x.com",
         "reddit.com",
-        "quora.com",  # NEW
-        "answers.yahoo.com",  # NEW
-        "ask.com",  # NEW
+        "quora.com",
+        "answers.yahoo.com",
+        "ask.com",
     )
 
-    # Rate limit handling (NEW)
     llm_retry_on_429: bool = True
     llm_max_retries: int = 2
     llm_retry_delay_seconds: float = 2.0
@@ -95,74 +87,58 @@ class ResearchConfig:
 class EvidenceConfig:
     """Configuration for Evidence Evaluation Agent (PRODUCTION MODE)."""
 
-    # API Keys
     groq_api_key: str = field(default_factory=lambda: os.getenv("GROQ_API_KEY", ""))
 
-    # Scoring weights (must sum to 1.0)
-    domain_weight: float = 0.5  # Increased from 0.4
-    quality_weight: float = 0.3  # Decreased from 0.4
+    domain_weight: float = 0.5
+    quality_weight: float = 0.3
     recency_weight: float = 0.2
 
-    # Model configuration
     model_name: str = "llama-3.3-70b-versatile"
     temperature: float = 0.1
     max_tokens_quality: int = 10
     max_tokens_reasoning: int = 200
 
-    # Consensus thresholds (STRICTER)
-    strong_consensus_threshold: float = 0.80  # Raised from 0.75
-    likely_consensus_threshold: float = 0.65  # Raised from 0.60
+    strong_consensus_threshold: float = 0.80
+    likely_consensus_threshold: float = 0.65
 
-    # Minimum requirements (NEW)
-    min_tier1_sources_for_strong: int = 1  # Require at least 1 Tier-1 source
-    min_total_sources: int = 2  # Require at least 2 sources
+    min_tier1_sources_for_strong: int = 1
+    min_total_sources: int = 2
 
-    # Evidence fit thresholds (NEW)
-    poor_fit_threshold: float = 0.35  # Below this → likely_false
-    weak_fit_threshold: float = 0.50  # Below this → downgrade consensus
+    poor_fit_threshold: float = 0.35
+    weak_fit_threshold: float = 0.50
 
-    # Source credibility tiers
     tier1_sources: Set[str] = field(default_factory=lambda: {
-        # News Agencies
         'reuters.com', 'apnews.com', 'afp.com', 'ap.org',
         'bbc.com', 'bbc.co.uk', 'pbs.org', 'npr.org', 'c-span.org',
 
-        # Scientific/Academic
         'nature.com', 'science.org', 'sciencedirect.com', 'nejm.org',
         'thelancet.com', 'bmj.com', 'plos.org', 'springer.com',
 
-        # Government (US)
         'nih.gov', 'cdc.gov', 'fda.gov', 'nasa.gov', 'noaa.gov',
         'census.gov', 'bls.gov', 'dol.gov', 'sec.gov', 'ftc.gov',
         'federalreserve.gov',
         '.gov', '.edu', '.mil',
 
-        # International/EU
         'who.int', 'europa.eu', 'ec.europa.eu', 'eurostat',
         'ecb.europa.eu', 'imf.org', 'worldbank.org', 'oecd.org',
 
-        # National Statistics (Europe)
-        'statbel.fgov.be', 'nbb.be',  # Belgium
-        'ons.gov.uk',  # UK
-        'destatis.de',  # Germany
-        'insee.fr',  # France
-        'istat.it',  # Italy
+        'statbel.fgov.be', 'nbb.be',
+        'ons.gov.uk',
+        'destatis.de',
+        'insee.fr',
+        'istat.it',
 
-        # Financial
         'bloomberg.com', 'ft.com', 'wsj.com',
     })
 
     tier2_sources: Set[str] = field(default_factory=lambda: {
-        # Major Newspapers
         'nytimes.com', 'washingtonpost.com', 'usatoday.com',
         'latimes.com', 'chicagotribune.com', 'bostonglobe.com',
         'theguardian.com', 'telegraph.co.uk', 'independent.co.uk',
 
-        # Quality Magazines
         'economist.com', 'theatlantic.com', 'newyorker.com',
         'foreignaffairs.com', 'time.com',
 
-        # Business/Tech
         'forbes.com', 'businessinsider.com', 'cnbc.com',
         'arstechnica.com', 'theverge.com', 'wired.com',
     })

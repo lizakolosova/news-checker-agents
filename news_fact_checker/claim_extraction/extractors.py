@@ -28,12 +28,10 @@ class EntityExtractor:
             e = e.strip()
             if not e or e in self.stop_words:
                 continue
-            # Filter lone month names (often temporal markers, not entities)
             if e in self.month_words:
                 continue
             cleaned.append(e)
 
-        # De-duplicate while preserving order
         seen = set()
         out = []
         for e in cleaned:
@@ -73,7 +71,6 @@ class TemporalExtractor:
         markers.extend(self.patterns.temporal_marker_pattern.findall(text))
         markers.extend(self.patterns.relative_time_pattern.findall(text))
 
-        # normalize whitespace + dedupe preserve order
         seen = set()
         out = []
         for m in markers:

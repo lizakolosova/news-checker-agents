@@ -154,7 +154,6 @@ class ClaimExtractionAgent:
         has_entity = bool(self.patterns.entity_pattern.search(s))
         has_attrib = bool(self.patterns.attribution_pattern.search(s))
 
-        # IMPORTANT: do NOT treat apostrophes as quotes (year's, don't, etc.)
         has_quote = ('"' in s) or ("“" in s) or ("”" in s)
 
         anchors = sum([has_number, has_date, has_entity, has_attrib, has_quote])

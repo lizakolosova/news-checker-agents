@@ -1,4 +1,3 @@
-# news_fact_checker/research/agent.py
 """
 Hybrid LLM Research Agent (retrieval only).
 
@@ -16,22 +15,21 @@ This agent does NOT:
 
 from __future__ import annotations
 
-import json
 import os
-import re
 import time
 import uuid
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
+from news_fact_checker.research.utils import fallback_query_plan
 
 import structlog
 
 from news_fact_checker import Claim
-from news_fact_checker.claim_extraction.models import ClaimType
 from news_fact_checker.config import ResearchConfig
 from news_fact_checker.research.evidence_filter import filter_low_signal, score_and_keep
-from news_fact_checker.research.query_builder import generate_queries
+from news_fact_checker.research.parsing import parse_llm_response
 from news_fact_checker.research.serper_client import SerperClient
+from news_fact_checker.research.utils import authority_weight, build_llm_prompt, get_claim_type_str, fallback_query_plan
 from news_fact_checker.utils import clean_claim_text
 
 try:
@@ -41,7 +39,6 @@ except ImportError:
 
 logger = structlog.get_logger().bind(component="research_agent")
 
-# Domains to exclude from evidence gathering
 LOW_SIGNAL_DOMAINS = (
     "facebook.com",
     "instagram.com",
@@ -50,82 +47,6 @@ LOW_SIGNAL_DOMAINS = (
     "reddit.com",
     "quora.com",
 )
-
-
-def _authority_weight(url: str, authoritative_domains: Optional[List[str]] = None) -> float:
-    """Calculate authority weight [0, 1] based on URL domain."""
-    if not url:
-        return 0.0
-
-    url_lower = url.lower()
-
-    # Check LLM-suggested authoritative domains
-    if authoritative_domains:
-        auth_lower = [d.lower() for d in authoritative_domains if d]
-        if any(domain in url_lower for domain in auth_lower):
-            return 1.0
-
-    # Government and international organizations
-    gov_markers = (".gov", ".gouv", ".gov.uk", ".gv.", ".stat.", "europa.eu", ".int")
-    if any(marker in url_lower for marker in gov_markers):
-        return 0.9
-
-    # Mainstream news sources
-    news_markers = (
-        "reuters.com", "apnews.com", "bbc.com", "nytimes.com",
-        "ft.com", "bloomberg.com", "wsj.com", "theguardian.com",
-    )
-    if any(marker in url_lower for marker in news_markers):
-        return 0.6
-
-    return 0.0
-
-
-def _fallback_query_plan(claim: Claim) -> Dict[str, Any]:
-    """Generate fallback query plan when LLM is unavailable."""
-    base_queries = generate_queries(claim, max_queries=5)
-    return {
-        "domain": "unknown",
-        "authority_queries": base_queries,
-        "news_queries": base_queries[:2],
-        "authoritative_domains": [],
-        "strategy": "deterministic_fallback",
-    }
-
-
-def _build_llm_prompt(claim_text: str, claim_type: str) -> str:
-    """Build prompt for LLM query generation with strict JSON formatting."""
-    return f"""You are a research strategist for a fact-checking system.
-
-Analyze this claim and respond with ONLY a valid JSON object (no markdown, no backticks, no explanations).
-
-Your tasks:
-1. Identify the domain: government_statistics, entertainment, sports, corporate, mixed, or other
-2. Create 3-6 high-quality search queries for official/reputable sources
-3. Create 1-3 broader news-style queries
-4. List 3-8 authoritative domains for this claim type
-
-Required JSON format:
-{{
-  "domain": "government_statistics",
-  "authority_queries": ["query 1", "query 2", "query 3"],
-  "news_queries": ["news query 1", "news query 2"],
-  "authoritative_domains": ["domain1.com", "domain2.org"]
-}}
-
-Claim type: {claim_type}
-Claim: {claim_text}
-
-JSON response:"""
-
-
-def _get_claim_type_str(claim: Claim) -> str:
-    """Extract claim type as string."""
-    claim_type = getattr(claim, "claim_type", None)
-    if isinstance(claim_type, ClaimType):
-        return claim_type.value
-    return str(claim_type) if claim_type else "unknown"
-
 
 @dataclass
 class ResearchAgent:
@@ -151,7 +72,6 @@ class ResearchAgent:
         self.logger = structlog.get_logger().bind(component="research_agent")
         self.serper = SerperClient(api_key=self.config.search_api_key)
 
-        # LLM client setup for query planning
         if llm_client is not None:
             self.llm_client = llm_client
         elif OllamaClient is not None:
@@ -194,13 +114,10 @@ class ResearchAgent:
             )
 
             try:
-                # Generate query plan using LLM or fallback
                 query_plan = self._generate_query_plan(claim, trace_id)
 
-                # Retrieve evidence from web
                 evidence = self._progressive_retrieval(claim, query_plan, trace_id)
 
-                # Assess retrieval quality
                 quality_report = self._assess_quality(evidence, trace_id)
 
                 duration_ms = (time.time() - start_time) * 1000.0
@@ -256,22 +173,18 @@ class ResearchAgent:
 
         return results
 
-    # ================================================================
-    # QUERY PLANNING
-    # ================================================================
-
     def _generate_query_plan(self, claim: Claim, trace_id: str) -> Dict[str, Any]:
         """Generate search query plan using LLM or fallback to heuristics."""
         if not self.llm_client:
-            return _fallback_query_plan(claim)
+            return fallback_query_plan(claim)
 
         claim_text = clean_claim_text(claim.text)
-        claim_type = _get_claim_type_str(claim)
-        prompt = _build_llm_prompt(claim_text, claim_type)
+        claim_type = get_claim_type_str(claim)
+        prompt = build_llm_prompt(claim_text, claim_type)
 
         try:
             content = self._call_llm_for_query_plan(prompt)
-            return self._parse_llm_response(content, claim, trace_id)
+            return parse_llm_response(content, claim, trace_id)
         except Exception as e:
             self.logger.warning(
                 "llm_query_plan_failed",
@@ -279,7 +192,7 @@ class ResearchAgent:
                 error=str(e),
                 error_type=type(e).__name__,
             )
-            return _fallback_query_plan(claim)
+            return fallback_query_plan(claim)
 
     def _call_llm_for_query_plan(self, prompt: str) -> str:
         """
@@ -292,7 +205,6 @@ class ResearchAgent:
         if not self.llm_client:
             raise RuntimeError("LLM client not configured")
 
-        # Try Groq/OpenAI style
         chat_attr = getattr(self.llm_client, "chat", None)
         if chat_attr is not None and hasattr(chat_attr, "completions"):
             resp = self.llm_client.chat.completions.create(
@@ -302,7 +214,6 @@ class ResearchAgent:
             )
             return resp.choices[0].message.content
 
-        # Try Ollama style
         if hasattr(self.llm_client, "chat"):
             resp = self.llm_client.chat(
                 model="llama3",
@@ -315,102 +226,6 @@ class ResearchAgent:
             return content
 
         raise TypeError(f"Unsupported LLM client type: {type(self.llm_client)}")
-
-    def _parse_llm_response(
-            self,
-            content: str,
-            claim: Claim,
-            trace_id: str,
-    ) -> Dict[str, Any]:
-        """
-        Parse and validate LLM response into query plan.
-
-        Handles:
-        - Extra text before/after JSON
-        - Markdown code blocks
-        - Malformed JSON with missing braces
-        - Python tuple syntax in lists
-        """
-        plan: Dict[str, Any] = {
-            "domain": "unknown",
-            "authority_queries": [],
-            "news_queries": [],
-            "authoritative_domains": [],
-            "strategy": "llm",
-        }
-
-        raw = (content or "").strip()
-
-        try:
-            # Remove markdown code blocks if present
-            raw = re.sub(r'```(?:json)?\s*', '', raw)
-            raw = re.sub(r'```\s*$', '', raw)
-
-            # Find JSON object boundaries
-            start = raw.find("{")
-            if start == -1:
-                raise ValueError("No '{' found in LLM response")
-
-            candidate = raw[start:]
-
-            # Fix Python tuple syntax: ("text") -> "text"
-            # This handles the malformed output from your LLM
-            candidate = re.sub(r'\(\s*"([^"]+)"\s*\)', r'"\1"', candidate)
-
-            # Try to parse JSON
-            try:
-                plan_json = json.loads(candidate)
-            except json.JSONDecodeError:
-                # Auto-close braces if needed
-                open_braces = candidate.count("{")
-                close_braces = candidate.count("}")
-                if close_braces < open_braces:
-                    candidate += "}" * (open_braces - close_braces)
-
-                # Try parsing again
-                plan_json = json.loads(candidate)
-
-            # Extract and validate fields
-            for key in ("domain", "authority_queries", "news_queries", "authoritative_domains"):
-                if key in plan_json:
-                    value = plan_json[key]
-
-                    # Ensure lists are actually lists
-                    if key.endswith("_queries") or key == "authoritative_domains":
-                        if not isinstance(value, list):
-                            value = [value] if value else []
-                        # Clean up any remaining tuple artifacts
-                        value = [
-                            str(item).strip('()"\' ')
-                            for item in value
-                            if item
-                        ]
-
-                    plan[key] = value
-
-            self.logger.info(
-                "llm_query_plan_success",
-                trace_id=trace_id,
-                domain=plan["domain"],
-                authority_count=len(plan["authority_queries"]),
-                news_count=len(plan["news_queries"]),
-            )
-
-        except Exception as e:
-            self.logger.warning(
-                "llm_query_plan_parse_failed",
-                trace_id=trace_id,
-                raw_preview=raw[:400],
-                error=str(e),
-                error_type=type(e).__name__,
-            )
-            return _fallback_query_plan(claim)
-
-        return plan
-
-    # ================================================================
-    # EVIDENCE RETRIEVAL
-    # ================================================================
 
     def _progressive_retrieval(
             self,
@@ -430,7 +245,6 @@ class ResearchAgent:
         authoritative_domains = query_plan.get("authoritative_domains") or []
         authority_queries = query_plan.get("authority_queries") or []
 
-        # Expand authority queries with site: operators
         expanded_queries = []
         for query in authority_queries:
             query = query.strip()
@@ -439,13 +253,11 @@ class ResearchAgent:
 
             expanded_queries.append(query)
 
-            # Add site-specific versions
             for domain in authoritative_domains:
                 domain = domain.strip()
                 if domain:
                     expanded_queries.append(f"site:{domain} {query}")
 
-        # Round 1: Authority search
         evidence = []
         if expanded_queries:
             evidence = self._search_and_filter(
@@ -457,7 +269,6 @@ class ResearchAgent:
                 authoritative_domains=authoritative_domains,
             )
 
-        # Round 2: News search if needed
         if len(evidence) < min_evidence:
             news_queries = query_plan.get("news_queries") or []
             if news_queries:
@@ -530,7 +341,7 @@ class ResearchAgent:
             snippet = source.get("snippet") or ""
 
             base_relevance = float(source.get("relevance_score", 0.0))
-            auth_weight = _authority_weight(url, authoritative_domains)
+            auth_weight = authority_weight(url, authoritative_domains)
 
             combined_score = 0.7 * base_relevance + 0.3 * auth_weight
 

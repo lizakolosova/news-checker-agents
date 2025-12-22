@@ -19,7 +19,6 @@ def _extract_years(text: str) -> Set[str]:
 
 
 def _extract_months(text: str) -> Set[str]:
-    # Works for English month names (good baseline; you can expand later if needed)
     months = {
         "january", "february", "march", "april", "may", "june",
         "july", "august", "september", "october", "november", "december",
@@ -30,7 +29,6 @@ def _extract_months(text: str) -> Set[str]:
 
 def _looks_like_attribution_claim(claim: str) -> bool:
     c = (claim or "").lower()
-    # Generic patterns (not US-specific)
     return any(p in c for p in ("according to", "said", "stated", "reports", "reported", "announced", "data from"))
 
 
@@ -45,9 +43,7 @@ def _extract_attribution_entities(claim: str) -> List[str]:
     if not m:
         return []
     ent = m.group(1).strip()
-    # Remove leading determiners
     ent = re.sub(r"(?i)^(the|a|an)\s+", "", ent).strip()
-    # Keep a few words max (avoid capturing entire clause)
     words = ent.split()
     ent = " ".join(words[:8]).strip()
     return [ent] if ent else []
@@ -67,19 +63,15 @@ def _authority_penalty(claim: str, source_url: str, source_title: str, snippet: 
     if not ents:
         return 1.0
 
-    # If the source obviously matches the entity, no penalty.
     hay = f"{source_url} {source_title} {snippet}".lower()
     for ent in ents:
         if ent.lower() in hay:
             return 1.0
 
-    # If source domain is likely authoritative (.gov/.int/.europa.eu/.ac.xx etc),
-    # apply a smaller penalty (it might still be a valid official source).
     url = (source_url or "").lower()
     if any(tld in url for tld in (".gov", ".int", ".europa.eu", ".eu", ".ac.", ".edu")):
         return 0.75
 
-    # Non-authority sources are heavily penalized for attribution claims.
     return 0.40
 
 
@@ -144,7 +136,6 @@ def _calculate_weighted_stances(claim: str, sources: List[Dict]) -> Tuple[float,
 
         base_weight = cred * rel * qual * fit * rec * scf
 
-        # Temporal grounding
         text = f"{source.get('source_title','')} {source.get('snippet','')}"
         t_pen, t_reason = _temporal_penalty(claim, text)
         if t_reason == "year_mismatch":

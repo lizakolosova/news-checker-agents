@@ -20,8 +20,8 @@ from typing import Dict, List
 
 from news_fact_checker.claim_extraction.agent import ClaimExtractionAgent
 from news_fact_checker.research.agent import ResearchAgent
-from news_fact_checker.evidence.evidence_agent import EvidenceEvaluationAgent
-from news_fact_checker.verdict.verdict_agent import VerdictAgent
+from news_fact_checker.evidence.agent import EvidenceEvaluationAgent
+from news_fact_checker.verdict.agent import VerdictAgent
 from news_fact_checker.verdict.explanation_generator import VerdictRating
 
 # Rating emoji mapping

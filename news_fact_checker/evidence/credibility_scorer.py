@@ -22,7 +22,6 @@ from news_fact_checker.config import EvidenceConfig
 
 logger = structlog.get_logger().bind(component="credibility_scorer")
 
-# Try to import Ollama client (optional)
 try:
     from ollama import Client as OllamaClient
 except ImportError:
@@ -52,7 +51,6 @@ def _structural_score(domain: str) -> float:
 
     domain_lower = domain.lower()
 
-    # Government and institutional domains (highest trust)
     gov_patterns = (
         ".gov.", ".gov", ".gouv.", ".parliament", ".europa.eu",
         ".int", ".senate", ".congress"
@@ -60,22 +58,18 @@ def _structural_score(domain: str) -> float:
     if any(pattern in domain_lower for pattern in gov_patterns):
         return 0.92
 
-    # Educational and academic domains
     edu_patterns = (".edu", ".ac.", ".university")
     if any(pattern in domain_lower for pattern in edu_patterns):
         return 0.88
 
-    # Non-profit organizations
     if domain_lower.endswith(".org"):
         return 0.78
 
-    # Commercial and media domains
     commercial_patterns = (".com", ".net", ".co.")
     if any(domain_lower.endswith(pattern) or pattern in domain_lower
            for pattern in commercial_patterns):
         return 0.70
 
-    # Unknown or regional TLDs
     return 0.60
 
 
@@ -91,7 +85,6 @@ def _ugc_penalty_multiplier(domain: str) -> float:
 
     domain_lower = domain.lower()
 
-    # Social media and UGC platforms
     low_credibility_patterns = (
         "facebook.com", "instagram.com", "tiktok.com", "twitter.com",
         "x.com", "reddit.com", "quora.com", "medium.com", "substack.com",
@@ -123,18 +116,15 @@ def _extract_json_from_text(text: str) -> Dict[str, Any]:
     if not text:
         raise ValueError("Empty text provided")
 
-    # Remove markdown code blocks
     text = re.sub(r'```(?:json)?\s*', '', text)
     text = re.sub(r'```\s*$', '', text)
     text = text.strip()
 
-    # Try direct JSON parse first (fastest path)
     try:
         return json.loads(text)
     except json.JSONDecodeError:
         pass
 
-    # Find JSON object boundaries
     start = text.find("{")
     end = text.rfind("}") + 1
 
@@ -144,14 +134,11 @@ def _extract_json_from_text(text: str) -> Dict[str, Any]:
     if end <= start:
         raise ValueError("No closing brace '}' found after opening brace")
 
-    # Extract JSON substring
     json_str = text[start:end]
 
-    # Try parsing the extracted substring
     try:
         return json.loads(json_str)
     except json.JSONDecodeError:
-        # Auto-close unclosed braces as last resort
         open_braces = json_str.count("{")
         close_braces = json_str.count("}")
 
@@ -178,24 +165,19 @@ def _normalize_llm_response(response: Any) -> str:
     if not response:
         return ""
 
-    # Handle Ollama Response object with .message attribute
     if hasattr(response, "message"):
         msg = getattr(response, "message")
         if isinstance(msg, dict):
             return msg.get("content", "") or ""
-        # Pydantic model with .content attribute
         if hasattr(msg, "content"):
             return getattr(msg, "content", "") or ""
 
-    # Handle dict responses
     if isinstance(response, dict):
-        # Ollama-style: {"message": {"content": "..."}}
         if "message" in response:
             msg = response["message"]
             if isinstance(msg, dict):
                 return msg.get("content", "") or ""
 
-        # OpenAI/Groq-style: {"choices": [{"message": {"content": "..."}}]}
         if "choices" in response:
             try:
                 choice = response["choices"][0]
@@ -204,11 +186,9 @@ def _normalize_llm_response(response: Any) -> str:
             except (IndexError, KeyError, TypeError):
                 pass
 
-        # Direct content field
         if "content" in response:
             return response.get("content", "") or ""
 
-    # Handle OpenAI/Groq ChatCompletion objects
     if hasattr(response, "choices"):
         try:
             choice = response.choices[0]
@@ -218,8 +198,34 @@ def _normalize_llm_response(response: Any) -> str:
         except (IndexError, AttributeError):
             pass
 
-    # Fallback: stringify
     return str(response)
+
+
+def _build_reputation_prompt(domain: str) -> str:
+    """Build prompt for LLM domain reputation query."""
+    return f"""Rate the factual reliability of this domain for news and verifiable claims.
+
+Domain: {domain}
+
+Consider:
+- Is this an official government or academic source?
+- Is this an established news organization?
+- Does this domain have a reputation for accuracy?
+
+Respond with ONLY valid JSON (no markdown, no extra text):
+{{
+"score": 0.75,
+"explanation": "Brief reason for the score"
+}}
+
+Score guidelines:
+- 0.9-1.0: Official government/academic sources
+- 0.7-0.8: Established reputable news organizations
+- 0.5-0.6: General commercial/media sites
+- 0.3-0.4: Blogs, opinion sites
+- 0.0-0.2: Known unreliable sources
+
+JSON response:"""
 
 
 @dataclass
@@ -243,7 +249,6 @@ class CredibilityScorer:
     config: EvidenceConfig
     llm_client: Optional[Any] = None
 
-    # Caches for performance
     domain_score_cache: Dict[str, float] = field(default_factory=dict)
     llm_reputation_cache: Dict[str, float] = field(default_factory=dict)
 
@@ -277,13 +282,11 @@ class CredibilityScorer:
         """
         domain = _extract_domain(url)
         if not domain:
-            return 0.5  # Neutral default for invalid URLs
+            return 0.5
 
-        # Check cache first
         if domain in self.domain_score_cache:
             return self.domain_score_cache[domain]
 
-        # Calculate and cache score
         score = self._score_domain(domain)
         self.domain_score_cache[domain] = score
         return score
@@ -301,12 +304,12 @@ class CredibilityScorer:
         score = self.assess_domain_credibility(url)
 
         if score >= 0.80:
-            return 1  # Highly credible
+            return 1
         if score >= 0.60:
-            return 2  # Credible
+            return 2
         if score >= 0.40:
-            return 3  # Moderate
-        return 0  # Low credibility
+            return 3
+        return 0
 
     def update_from_consensus(
         self,
@@ -331,7 +334,6 @@ class CredibilityScorer:
 
         old_score = self.domain_score_cache.get(domain, 0.6)
 
-        # Small step size for gradual learning
         weight = max(0.1, min(2.0, weight))
         step = 0.03 * weight
 
@@ -347,10 +349,6 @@ class CredibilityScorer:
             new_score=round(new_score, 3),
             aligned=aligned_with_consensus,
         )
-
-    # ================================================================
-    # INTERNAL SCORING
-    # ================================================================
 
     def _score_domain(self, domain: str) -> float:
         """
@@ -382,9 +380,6 @@ class CredibilityScorer:
 
         return score
 
-    # ================================================================
-    # LLM REPUTATION (OPTIONAL)
-    # ================================================================
 
     def _llm_adjustment(self, domain: str) -> float:
         """
@@ -443,9 +438,8 @@ class CredibilityScorer:
         Raises:
             Exception: If LLM call or parsing fails
         """
-        prompt = self._build_reputation_prompt(domain)
+        prompt = _build_reputation_prompt(domain)
 
-        # Call LLM
         try:
             response = self.llm_client.chat(
                 model="llama3",
@@ -460,7 +454,6 @@ class CredibilityScorer:
             )
             raise
 
-        # Normalize response to text
         try:
             content = _normalize_llm_response(response)
         except Exception as e:
@@ -472,7 +465,6 @@ class CredibilityScorer:
             )
             raise
 
-        # Parse JSON from content
         try:
             data = _extract_json_from_text(content)
         except Exception as e:
@@ -488,7 +480,6 @@ class CredibilityScorer:
                 "explanation": f"Parse error: {str(e)[:100]}",
             }
 
-        # Validate required fields
         if "score" not in data:
             logger.warning(
                 "llm_response_missing_score",
@@ -502,28 +493,3 @@ class CredibilityScorer:
 
         return data
 
-    def _build_reputation_prompt(self, domain: str) -> str:
-        """Build prompt for LLM domain reputation query."""
-        return f"""Rate the factual reliability of this domain for news and verifiable claims.
-
-Domain: {domain}
-
-Consider:
-- Is this an official government or academic source?
-- Is this an established news organization?
-- Does this domain have a reputation for accuracy?
-
-Respond with ONLY valid JSON (no markdown, no extra text):
-{{
-  "score": 0.75,
-  "explanation": "Brief reason for the score"
-}}
-
-Score guidelines:
-- 0.9-1.0: Official government/academic sources
-- 0.7-0.8: Established reputable news organizations
-- 0.5-0.6: General commercial/media sites
-- 0.3-0.4: Blogs, opinion sites
-- 0.0-0.2: Known unreliable sources
-
-JSON response:"""
