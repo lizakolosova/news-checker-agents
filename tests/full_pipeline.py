@@ -1,7 +1,3 @@
-"""
-Complete Multi-Agent Fact-Checker Pipeline
-Integrates all three agents: Extraction -> Research -> Evidence Evaluation
-"""
 import sys
 import os
 from dotenv import load_dotenv
@@ -12,7 +8,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'news_fact_chec
 
 from news_fact_checker.claim_extraction.agent import ClaimExtractionAgent
 from news_fact_checker.research.agent import ResearchAgent
-from news_fact_checker.evidence.evidence_agent import EvidenceEvaluationAgent
+from news_fact_checker.evidence.agent import EvidenceEvaluationAgent
 
 article = """
 The unemployment rate dropped to 3.5% in December 2023 according to the Bureau of Labor Statistics.
@@ -73,7 +69,7 @@ evidence_agent = EvidenceEvaluationAgent()
 
 final_results = []
 for research_result in evidence_results:
-    evaluation = evidence_agent.evaluate_evidence(
+    evaluation = evidence_agent.evaluate(
         claim=research_result['original_claim'],
         evidence_list=research_result['evidence']
     )

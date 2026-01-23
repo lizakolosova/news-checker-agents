@@ -1,19 +1,52 @@
-"""
-Evidence Evaluation Agent Package
-Assesses source credibility and evidence quality for fact-checking.
-"""
+from news_fact_checker.evidence.agent import EvidenceEvaluationAgent
+from news_fact_checker.evidence.models import (
+    StanceResult,
+    StanceLabel,
+    ConsensusLevel,
+    CredibilityTier,
+    EvidenceSource,
+    EvaluatedSource,
+    EvaluationResult,
+    DomainReputation,
+    ConsensusMetrics,
+)
+from news_fact_checker.evidence.config import EvidenceConfig, DEFAULT_EVIDENCE_CONFIG
+from news_fact_checker.evidence.credibility_scorer import CredibilityScorer
+from news_fact_checker.evidence.quality_assessor import QualityAssessor
+from news_fact_checker.evidence.consensus_detector import ConsensusDetector
+from news_fact_checker.evidence.reasoning_generator import ReasoningGenerator
+from news_fact_checker.evidence.stance_classifier import StanceClassifier
+from news_fact_checker.evidence.scoring import (
+    score_recency,
+    score_fit,
+    calculate_overall_credibility,
+    calculate_average_quality,
+    calculate_confidence,
+)
 
-from .agent import EvidenceEvaluationAgent
-from .credibility_scorer import CredibilityScorer
-from .quality_assessor import QualityAssessor
-from .consensus_detector import ConsensusDetector
-from .reasoning_generator import ReasoningGenerator
+__version__ = "2.0.0"
 
-__version__ = "1.0.0"
 __all__ = [
     "EvidenceEvaluationAgent",
+    "StanceResult",
+    "StanceLabel",
+    "ConsensusLevel",
+    "CredibilityTier",
+    "EvidenceSource",
+    "EvaluatedSource",
+    "EvaluationResult",
+    "DomainReputation",
+    "ConsensusMetrics",
+    "EvidenceConfig",
+    "DEFAULT_EVIDENCE_CONFIG",
     "CredibilityScorer",
     "QualityAssessor",
     "ConsensusDetector",
-    "ReasoningGenerator"
+    "ReasoningGenerator",
+    "StanceClassifier",
+    "score_recency",
+    "score_fit",
+    "calculate_overall_credibility",
+    "calculate_average_quality",
+    "calculate_confidence",
 ]

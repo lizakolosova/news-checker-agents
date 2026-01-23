@@ -1,16 +1,3 @@
-"""
-Enhanced 4-Agent Pipeline with Multi-Domain Test Cases
-
-Tests coverage:
-- Government statistics (EU, Belgium, US, UK)
-- Celebrity/Entertainment (music, movies)
-- Sports (basketball, soccer, football)
-- Corporate finance
-- Mixed domains
-- Temporal verification
-- False claims
-"""
-
 from __future__ import annotations
 
 from dotenv import load_dotenv
@@ -24,7 +11,6 @@ from news_fact_checker.evidence.agent import EvidenceEvaluationAgent
 from news_fact_checker.verdict.agent import VerdictAgent
 from news_fact_checker.verdict.explanation_generator import VerdictRating
 
-# Rating emoji mapping
 RATING_EMOJI = {
     VerdictRating.TRUE: "✅",
     VerdictRating.MOSTLY_TRUE: "✓",
@@ -36,9 +22,6 @@ RATING_EMOJI = {
 
 
 def run_article(name: str, text: str, num_claims_to_check: int = 3) -> Dict:
-    """Run complete 4-agent pipeline on a single article."""
-
-    # Initialize agents (using domain-agnostic research agent)
     claim_agent = ClaimExtractionAgent()
     research_agent = ResearchAgent()
     evidence_agent = EvidenceEvaluationAgent()
@@ -48,7 +31,6 @@ def run_article(name: str, text: str, num_claims_to_check: int = 3) -> Dict:
     print(f"📰 ARTICLE: {name}")
     print("=" * 90)
 
-    # AGENT 1: Claim Extraction
     claims = claim_agent.extract_claims(text)
     print(f"\n📋 AGENT 1 - Extracted {len(claims)} verifiable claims:")
     for i, c in enumerate(claims[:num_claims_to_check], start=1):
@@ -58,7 +40,6 @@ def run_article(name: str, text: str, num_claims_to_check: int = 3) -> Dict:
     claims_to_check = claims[:num_claims_to_check]
     print(f"\n🔍 Fact-checking top {len(claims_to_check)} claims...")
 
-    # AGENT 2: Research (Domain-Aware)
     print("\n📚 AGENT 2 - Researching evidence...")
     research_results = research_agent.research_claims(claims_to_check)
 
@@ -70,11 +51,10 @@ def run_article(name: str, text: str, num_claims_to_check: int = 3) -> Dict:
         print(f"  Claim {i}: {len(rr['evidence'])} sources | "
               f"Domains: {domains} | Quality: {quality:.2f} | Tier-1: {tier1}")
 
-    # AGENT 3: Evidence Evaluation
     print("\n⚖️  AGENT 3 - Evaluating evidence quality...")
     evaluations = []
     for rr in research_results:
-        ev = evidence_agent.evaluate_evidence(
+        ev = evidence_agent.evaluate(
             claim=rr["original_claim"],
             evidence_list=rr["evidence"]
         )
@@ -84,7 +64,6 @@ def run_article(name: str, text: str, num_claims_to_check: int = 3) -> Dict:
               f"Confidence={ev['confidence']:.0%} | "
               f"Quality={ev['evidence_quality']:.0%}")
 
-    # AGENT 4: Verdict Synthesis
     print("\n🎯 AGENT 4 - Rendering final verdicts...")
     verdicts = []
     for i, (claim, evaluation) in enumerate(zip(claims_to_check, evaluations), start=1):

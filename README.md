@@ -61,7 +61,7 @@ multi-agents-project/
 ├── frontend/                   # React + Vite UI
 ├── tests/                      # pytest 
 ├── requirements.txt
-└── README.txt  ← This file
+└── README.md  ← This file
 ```
 
 AGENTS PIPELINE

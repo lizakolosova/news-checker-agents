@@ -14,9 +14,6 @@ logger = structlog.get_logger().bind(component="api")
 router = APIRouter()
 
 def run_factcheck_pipeline(payload: ArticleRequest) -> dict:
-    """
-    Sync pipeline. Keep it sync and run it in a threadpool from the async route.
-    """
     t0 = time.time()
 
     extractor = ClaimExtractionAgent()
