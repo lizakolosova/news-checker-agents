@@ -1,5 +1,3 @@
-"""Data models for claim claim_extraction."""
-
 import uuid
 from dataclasses import dataclass, field
 from typing import List, Dict, Any
@@ -7,7 +5,6 @@ from enum import Enum
 
 
 class ClaimType(Enum):
-    """Types of claims that can be extracted."""
     STATISTICAL = "statistical"
     TEMPORAL = "temporal"
     ATTRIBUTION = "attribution"
@@ -17,15 +14,13 @@ class ClaimType(Enum):
 
 
 class ClaimConfidence(Enum):
-    """Confidence levels for extracted claims."""
-    HIGH = "high"  # >0.8
-    MEDIUM = "medium"  # 0.5-0.8
-    LOW = "low"  # <0.5
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
 
 
 @dataclass
 class Claim:
-    """Represents an extracted claim from an article."""
 
     claim_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     text: str = ""
@@ -40,7 +35,6 @@ class Claim:
 
     @property
     def confidence_level(self) -> ClaimConfidence:
-        """Get confidence level enum based on score."""
         if self.confidence > 0.8:
             return ClaimConfidence.HIGH
         elif self.confidence > 0.5:
@@ -48,7 +42,6 @@ class Claim:
         return ClaimConfidence.LOW
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert claim to dictionary for serialization."""
         return {
             "claim_id": self.claim_id,
             "text": self.text,

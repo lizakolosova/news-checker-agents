@@ -1,18 +1,3 @@
-"""
-Hybrid LLM Research Agent (retrieval only).
-
-Responsibilities:
-- Use an LLM to detect the claim domain and suggest search queries
-- Use Serper to perform web search
-- Filter low-signal sources and rank by relevance
-- Return raw evidence snippets for evaluation
-
-This agent does NOT:
-- Score source credibility
-- Classify stance (supports / refutes / unclear)
-- Compute consensus or verdicts
-"""
-
 from __future__ import annotations
 
 import os
@@ -20,7 +5,6 @@ import time
 import uuid
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
-from news_fact_checker.research.utils import fallback_query_plan
 
 import structlog
 
@@ -50,20 +34,12 @@ LOW_SIGNAL_DOMAINS = (
 
 @dataclass
 class ResearchAgent:
-    """Agent responsible for researching claims and gathering raw evidence."""
 
     def __init__(
             self,
             config: Optional[ResearchConfig] = None,
             llm_client: Optional[Any] = None,
     ):
-        """
-        Initialize the research agent.
-
-        Args:
-            config: Research configuration (defaults from environment)
-            llm_client: Optional LLM client (Groq, OpenAI, or Ollama)
-        """
         self.config = config or ResearchConfig(
             search_api_key="dae9dbfe92891624116876b484dbbfcccb52ddbe",
             groq_api_key=os.getenv("GROQ_API_KEY", ""),
@@ -86,16 +62,6 @@ class ResearchAgent:
             )
 
     def research_claims(self, claims: List[Claim]) -> List[Dict[str, Any]]:
-        """
-        Research multiple claims and gather evidence.
-
-        Returns list of dicts with:
-            - claim_id: Unique identifier
-            - original_claim: Original claim text
-            - claim_type: Type of claim
-            - evidence: List of evidence items with URLs, snippets, relevance scores
-            - metadata: Research quality metrics and timing
-        """
         if not claims:
             self.logger.warning("research_claims_empty", msg="No claims provided")
             return []
@@ -174,7 +140,6 @@ class ResearchAgent:
         return results
 
     def _generate_query_plan(self, claim: Claim, trace_id: str) -> Dict[str, Any]:
-        """Generate search query plan using LLM or fallback to heuristics."""
         if not self.llm_client:
             return fallback_query_plan(claim)
 
@@ -195,13 +160,6 @@ class ResearchAgent:
             return fallback_query_plan(claim)
 
     def _call_llm_for_query_plan(self, prompt: str) -> str:
-        """
-        Call LLM client and return text content.
-
-        Supports:
-        - Groq/OpenAI-style: client.chat.completions.create(...)
-        - Ollama: client.chat(model=..., messages=[...])
-        """
         if not self.llm_client:
             raise RuntimeError("LLM client not configured")
 
@@ -233,12 +191,6 @@ class ResearchAgent:
             query_plan: Dict[str, Any],
             trace_id: str,
     ) -> List[Dict[str, Any]]:
-        """
-        Progressive evidence retrieval strategy.
-
-        Round 1: Authority-focused queries (with site: operators)
-        Round 2: Broader news queries if needed
-        """
         min_evidence = getattr(self.config, "min_evidence", 3)
         max_results = getattr(self.config, "max_evidence", 10)
 
@@ -309,7 +261,6 @@ class ResearchAgent:
             trace_id: str,
             authoritative_domains: Optional[List[str]] = None,
     ) -> List[Dict[str, Any]]:
-        """Execute web search and return ranked evidence."""
         if not queries:
             return []
 
@@ -383,12 +334,6 @@ class ResearchAgent:
             evidence: List[Dict[str, Any]],
             trace_id: str,
     ) -> Dict[str, Any]:
-        """
-        Assess retrieval quality (not evidence credibility).
-
-        This measures how good the search was, not whether evidence
-        supports/refutes the claim (handled by evaluation agent).
-        """
         if not evidence:
             return {
                 "quality_score": 0.0,

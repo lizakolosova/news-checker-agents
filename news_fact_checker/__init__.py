@@ -1,9 +1,3 @@
-"""
-Claim Extraction Agent Package
-
-A production-ready agent for extracting factual claims from news articles.
-"""
-
 from .claim_extraction.agent import ClaimExtractionAgent
 from .claim_extraction.models import Claim, ClaimType, ClaimConfidence
 from news_fact_checker.config import ClaimExtractionConfig, DEFAULT_CONFIG

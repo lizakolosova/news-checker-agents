@@ -1,13 +1,3 @@
-"""Source credibility assessment based on domain reputation.
-
-This module provides structural heuristics and optional LLM-based domain reputation
-scoring without relying on hard-coded tier lists.
-
-Public API:
-    - assess_domain_credibility(url) -> float in [0, 1]
-    - get_tier(url) -> int (1, 2, 3, or 0 for low credibility)
-"""
-
 from __future__ import annotations
 
 import json
@@ -29,7 +19,6 @@ except ImportError:
 
 
 def _extract_domain(url: str) -> str:
-    """Extract and normalize domain from URL."""
     if not url:
         return ""
     try:
@@ -40,12 +29,6 @@ def _extract_domain(url: str) -> str:
 
 
 def _structural_score(domain: str) -> float:
-    """
-    Calculate baseline credibility score from TLD and URL patterns.
-
-    Returns:
-        float: Score in [0.6, 0.92] based on domain structure
-    """
     if not domain:
         return 0.5
 
@@ -74,12 +57,6 @@ def _structural_score(domain: str) -> float:
 
 
 def _ugc_penalty_multiplier(domain: str) -> float:
-    """
-    Apply penalty for user-generated content and social media platforms.
-
-    Returns:
-        float: Multiplier in [0.5, 1.0] where 0.5 is maximum penalty
-    """
     if not domain:
         return 1.0
 
@@ -98,21 +75,6 @@ def _ugc_penalty_multiplier(domain: str) -> float:
 
 
 def _extract_json_from_text(text: str) -> Dict[str, Any]:
-    """
-    Robustly extract JSON object from text that may contain extra content.
-
-    Handles:
-        - Markdown code blocks
-        - Text before/after JSON
-        - Malformed JSON with missing braces
-        - Newlines and escaped characters
-
-    Returns:
-        dict: Parsed JSON object
-
-    Raises:
-        ValueError: If no valid JSON can be extracted
-    """
     if not text:
         raise ValueError("Empty text provided")
 
@@ -150,18 +112,6 @@ def _extract_json_from_text(text: str) -> Dict[str, Any]:
 
 
 def _normalize_llm_response(response: Any) -> str:
-    """
-    Normalize various LLM client response formats to plain text.
-
-    Supports:
-        - Ollama Response objects with .message attribute
-        - Ollama dict responses: {"message": {"content": "..."}}
-        - OpenAI/Groq ChatCompletion objects
-        - Raw string responses
-
-    Returns:
-        str: Extracted content text
-    """
     if not response:
         return ""
 
@@ -202,7 +152,6 @@ def _normalize_llm_response(response: Any) -> str:
 
 
 def _build_reputation_prompt(domain: str) -> str:
-    """Build prompt for LLM domain reputation query."""
     return f"""Rate the factual reliability of this domain for news and verifiable claims.
 
 Domain: {domain}
@@ -230,21 +179,6 @@ JSON response:"""
 
 @dataclass
 class CredibilityScorer:
-    """
-    Domain credibility scorer using structural heuristics and optional LLM enhancement.
-
-    Scoring components:
-        1. Structural signals (TLD, domain patterns)
-        2. UGC/social media penalties
-        3. Optional LLM reputation scoring
-        4. Optional consensus-based feedback
-
-    Tier mapping:
-        - Tier 1 (score >= 0.80): Highly credible (government, academic)
-        - Tier 2 (0.60-0.80): Credible (established media, organizations)
-        - Tier 3 (0.40-0.60): Moderate credibility
-        - Tier 0 (< 0.40): Low credibility (UGC, unverified sources)
-    """
 
     config: EvidenceConfig
     llm_client: Optional[Any] = None
@@ -253,7 +187,6 @@ class CredibilityScorer:
     llm_reputation_cache: Dict[str, float] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        """Initialize optional LLM client for domain reputation scoring."""
         if OllamaClient is None:
             logger.info("ollama_unavailable", reason="ollama package not installed")
             self.llm_client = None
@@ -271,15 +204,6 @@ class CredibilityScorer:
             self.llm_client = None
 
     def assess_domain_credibility(self, url: str) -> float:
-        """
-        Assess credibility score for a URL's domain.
-
-        Args:
-            url: Full URL to assess
-
-        Returns:
-            float: Credibility score in [0, 1]
-        """
         domain = _extract_domain(url)
         if not domain:
             return 0.5
@@ -292,15 +216,6 @@ class CredibilityScorer:
         return score
 
     def get_tier(self, url: str) -> int:
-        """
-        Map credibility score to tier level.
-
-        Args:
-            url: Full URL to assess
-
-        Returns:
-            int: Tier level (1=highest, 0=lowest)
-        """
         score = self.assess_domain_credibility(url)
 
         if score >= 0.80:
@@ -317,17 +232,6 @@ class CredibilityScorer:
         aligned_with_consensus: bool,
         weight: float = 1.0,
     ) -> None:
-        """
-        Update domain score based on consensus feedback (optional).
-
-        This allows the system to learn from high-confidence consensus verdicts.
-        Small adjustments prevent overfitting.
-
-        Args:
-            url: Source URL
-            aligned_with_consensus: Whether source aligned with consensus
-            weight: Adjustment weight (clamped to [0.1, 2.0])
-        """
         domain = _extract_domain(url)
         if not domain:
             return
@@ -351,17 +255,6 @@ class CredibilityScorer:
         )
 
     def _score_domain(self, domain: str) -> float:
-        """
-        Combine all scoring signals into final credibility score.
-
-        Components:
-            - Structural score from TLD/patterns
-            - UGC penalty multiplier
-            - Optional LLM adjustment multiplier
-
-        Returns:
-            float: Final score in [0, 1]
-        """
         structural = _structural_score(domain)
         ugc_multiplier = _ugc_penalty_multiplier(domain)
         llm_multiplier = self._llm_adjustment(domain)
@@ -382,16 +275,9 @@ class CredibilityScorer:
 
 
     def _llm_adjustment(self, domain: str) -> float:
-        """
-        Use LLM to provide reputation-based adjustment.
-
-        Returns:
-            float: Multiplier in [0.8, 1.2], centered at 1.0 (neutral)
-        """
         if not self.llm_client:
             return 1.0
 
-        # Check cache
         if domain in self.llm_reputation_cache:
             return self.llm_reputation_cache[domain]
 
@@ -399,10 +285,8 @@ class CredibilityScorer:
             reputation = self._query_llm_for_domain(domain)
             score = reputation.get("score", 0.6)
 
-            # Validate score is in [0, 1]
             score = max(0.0, min(1.0, float(score)))
 
-            # Map [0, 1] to multiplier [0.8, 1.2]
             multiplier = 0.8 + 0.4 * score
 
             logger.debug(
@@ -420,24 +304,13 @@ class CredibilityScorer:
                 error=str(e),
                 error_type=type(e).__name__,
             )
-            multiplier = 1.0  # Neutral fallback
+            multiplier = 1.0
 
         self.llm_reputation_cache[domain] = multiplier
         return multiplier
 
     def _query_llm_for_domain(self, domain: str) -> Dict[str, Any]:
-        """
-        Query LLM for domain reputation assessment.
 
-        Args:
-            domain: Domain to assess
-
-        Returns:
-            dict: {"score": float, "explanation": str}
-
-        Raises:
-            Exception: If LLM call or parsing fails
-        """
         prompt = _build_reputation_prompt(domain)
 
         try:

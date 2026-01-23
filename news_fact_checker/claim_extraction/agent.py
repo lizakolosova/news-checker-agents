@@ -1,5 +1,3 @@
-"""Main Claim Extraction Agent."""
-
 from __future__ import annotations
 
 import re
@@ -32,10 +30,6 @@ structlog.configure(
 
 
 class ClaimExtractionAgent:
-    """
-    Extracts verifiable factual claims from news articles.
-    Dependency-light, heuristic-based extraction with verifiability gating.
-    """
 
     def __init__(self, config: Optional[ClaimExtractionConfig] = None):
         self.config = config or DEFAULT_CONFIG
@@ -138,14 +132,6 @@ class ClaimExtractionAgent:
         return claims
 
     def _assess_verifiability(self, sentence: str) -> Tuple[float, str]:
-        """
-        Returns (verifiability_score, reason). Higher is better.
-
-        Generic anchors:
-          - number, date, named entity/org, explicit attribution, or actual quotation marks
-        Drops vague referent starters with no anchors.
-        Penalizes hedges and intensifiers without metric/attribution.
-        """
         s = (sentence or "").strip()
         s_lower = s.lower()
 
@@ -193,11 +179,6 @@ class ClaimExtractionAgent:
         )
 
     def _classify_sentence(self, sentence: str) -> Tuple[ClaimType, float]:
-        """
-        Classify sentence type with precedence rules and assign confidence.
-        Precedence (highest → lowest):
-          ATTRIBUTION → STATISTICAL → TEMPORAL → CAUSAL → COMPARATIVE → FACTUAL
-        """
         s = (sentence or "").lower()
         confidence = 0.4
 
@@ -238,7 +219,6 @@ class ClaimExtractionAgent:
         return claim_type, confidence
 
     def _extract_sub_claims(self, sentence: str, parent_claim: Claim) -> List[Claim]:
-        """Extract sub-claims from compound sentences split by coordinating conjunctions."""
         parts = self.patterns.coordinating_conjunction.split(sentence)
         if len(parts) <= 1:
             return []
@@ -275,7 +255,6 @@ class ClaimExtractionAgent:
         return sub_claims
 
     def _deduplicate_claims(self, claims: List[Claim]) -> List[Claim]:
-        """Remove duplicate or very similar claims (keeps highest-confidence versions)."""
         if not claims:
             return []
 

@@ -24,7 +24,6 @@ from news_fact_checker.evidence.agent import EvidenceEvaluationAgent
 from news_fact_checker.verdict.agent import VerdictAgent
 from news_fact_checker.verdict.explanation_generator import VerdictRating
 
-# Rating emoji mapping
 RATING_EMOJI = {
     VerdictRating.TRUE: "✅",
     VerdictRating.MOSTLY_TRUE: "✓",
@@ -36,9 +35,7 @@ RATING_EMOJI = {
 
 
 def run_article(name: str, text: str, num_claims_to_check: int = 3) -> Dict:
-    """Run complete 4-agent pipeline on a single article."""
 
-    # Initialize agents (using domain-agnostic research agent)
     claim_agent = ClaimExtractionAgent()
     research_agent = ResearchAgent()
     evidence_agent = EvidenceEvaluationAgent()
@@ -48,7 +45,6 @@ def run_article(name: str, text: str, num_claims_to_check: int = 3) -> Dict:
     print(f"📰 ARTICLE: {name}")
     print("=" * 90)
 
-    # AGENT 1: Claim Extraction
     claims = claim_agent.extract_claims(text)
     print(f"\n📋 AGENT 1 - Extracted {len(claims)} verifiable claims:")
     for i, c in enumerate(claims[:num_claims_to_check], start=1):
@@ -58,7 +54,6 @@ def run_article(name: str, text: str, num_claims_to_check: int = 3) -> Dict:
     claims_to_check = claims[:num_claims_to_check]
     print(f"\n🔍 Fact-checking top {len(claims_to_check)} claims...")
 
-    # AGENT 2: Research (Domain-Aware)
     print("\n📚 AGENT 2 - Researching evidence...")
     research_results = research_agent.research_claims(claims_to_check)
 
@@ -70,7 +65,6 @@ def run_article(name: str, text: str, num_claims_to_check: int = 3) -> Dict:
         print(f"  Claim {i}: {len(rr['evidence'])} sources | "
               f"Domains: {domains} | Quality: {quality:.2f} | Tier-1: {tier1}")
 
-    # AGENT 3: Evidence Evaluation
     print("\n⚖️  AGENT 3 - Evaluating evidence quality...")
     evaluations = []
     for rr in research_results:
@@ -84,7 +78,6 @@ def run_article(name: str, text: str, num_claims_to_check: int = 3) -> Dict:
               f"Confidence={ev['confidence']:.0%} | "
               f"Quality={ev['evidence_quality']:.0%}")
 
-    # AGENT 4: Verdict Synthesis
     print("\n🎯 AGENT 4 - Rendering final verdicts...")
     verdicts = []
     for i, (claim, evaluation) in enumerate(zip(claims_to_check, evaluations), start=1):
@@ -98,7 +91,6 @@ def run_article(name: str, text: str, num_claims_to_check: int = 3) -> Dict:
         print(f"  {emoji} Claim {i}: {verdict.rating.value.upper().replace('_', ' '):<15} "
               f"(Confidence: {verdict.confidence:.0%})")
 
-    # Summary
     print("\n" + "=" * 90)
     print(f"📋 ARTICLE SUMMARY: {name}")
     print("=" * 90)
@@ -137,7 +129,6 @@ def run_article(name: str, text: str, num_claims_to_check: int = 3) -> Dict:
 
 
 def main():
-    """Run comprehensive multi-domain test suite."""
 
     print("\n" + "🔬" * 45)
     print("MULTI-DOMAIN NEWS FACT-CHECKER")
@@ -145,9 +136,6 @@ def main():
     print("Testing: Government Stats | Entertainment | Sports | Corporate")
     print("🔬" * 45)
 
-    # ========================================================================
-    # TEST ARTICLES - MULTIPLE DOMAINS
-    # ========================================================================
 
     articles: List[tuple[str, str]] = [
         # ----------------------------------------------------------------
@@ -287,22 +275,15 @@ def main():
         ),
     ]
 
-    # ========================================================================
-    # RUN PIPELINE
-    # ========================================================================
     results = []
     for name, text in articles:
         result = run_article(name, text, num_claims_to_check=3)
         results.append(result)
 
-    # ========================================================================
-    # GLOBAL SUMMARY
-    # ========================================================================
     print("\n\n" + "=" * 90)
     print("🌍 GLOBAL SUMMARY - ALL ARTICLES")
     print("=" * 90)
 
-    # Aggregate by domain
     domain_stats = {
         "Government": [],
         "Entertainment": [],
@@ -348,7 +329,6 @@ def main():
         print(f"    Avg Confidence: {avg_conf:.0%} | Avg Quality: {avg_qual:.0%}")
         print(f"    ✅ True/Mostly True: {true_count} | ❌ False/Mostly False: {false_count} | ❓ Unverifiable: {unverifiable}")
 
-    # Overall stats
     all_verdicts = [v for r in results for v in r["verdicts"]]
     global_rating_dist = {}
     for v in all_verdicts:
@@ -375,7 +355,6 @@ def main():
     print(f"   Average evidence quality: {avg_quality:.0%}")
     print(f"   Articles processed: {len(results)}")
 
-    # Confidence breakdown
     high_conf = sum(1 for v in all_verdicts if v.confidence >= 0.80)
     med_conf = sum(1 for v in all_verdicts if 0.60 <= v.confidence < 0.80)
     low_conf = sum(1 for v in all_verdicts if v.confidence < 0.60)

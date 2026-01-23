@@ -12,14 +12,6 @@ class SerperClient:
     endpoint: str = "https://google.serper.dev/search"
 
     def search(self, queries: List[str], per_query_results: int = 5) -> List[Dict[str, str]]:
-        """
-        Run Serper web search for a list of query strings.
-
-        Returns a flat list of sources with fields:
-            - url
-            - title
-            - snippet
-        """
         headers = {
             "X-API-KEY": self.api_key,
             "Content-Type": "application/json",
@@ -35,7 +27,6 @@ class SerperClient:
             payload = {
                 "q": q,
                 "num": per_query_results,
-                # optional but nice:
                 "autocorrect": True,
                 "hl": "en",
             }
@@ -49,7 +40,6 @@ class SerperClient:
                 )
                 resp.raise_for_status()
             except requests.HTTPError as e:
-                # NEW: show status + body
                 try:
                     body = resp.text
                 except Exception:
@@ -62,11 +52,9 @@ class SerperClient:
 
             data = resp.json()
 
-            # Serper response structure: organic, answerBox, knowledgeGraph, news, etc.
             organic = data.get("organic", []) or []
             news = data.get("news", []) or []
 
-            # helper to push results into all_sources
             def push_result(r: Dict, kind: str = "organic") -> None:
                 all_sources.append(
                     {
@@ -83,7 +71,6 @@ class SerperClient:
             for r in news:
                 push_result(r, "news")
 
-            # answerBox / knowledgeGraph sometimes contain very strong evidence
             answer_box = data.get("answerBox") or {}
             if isinstance(answer_box, dict) and answer_box.get("link") or answer_box.get("title"):
                 push_result(answer_box, "answerBox")
@@ -92,7 +79,6 @@ class SerperClient:
             if isinstance(kg, dict) and kg.get("link") or kg.get("title"):
                 push_result(kg, "knowledgeGraph")
 
-        # De-dup by URL
         seen = set()
         unique: List[Dict[str, str]] = []
         for s in all_sources:

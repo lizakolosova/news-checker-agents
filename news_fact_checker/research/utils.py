@@ -5,7 +5,6 @@ from news_fact_checker.research.query_builder import generate_queries
 
 
 def authority_weight(url: str, authoritative_domains: Optional[List[str]] = None) -> float:
-    """Calculate authority weight [0, 1] based on URL domain."""
     if not url:
         return 0.0
 
@@ -30,7 +29,6 @@ def authority_weight(url: str, authoritative_domains: Optional[List[str]] = None
     return 0.0
 
 def build_llm_prompt(claim_text: str, claim_type: str) -> str:
-    """Build prompt for LLM query generation with strict JSON formatting."""
     return f"""You are a research strategist for a fact-checking system.
 
 Analyze this claim and respond with ONLY a valid JSON object (no markdown, no backticks, no explanations).
@@ -56,7 +54,6 @@ JSON response:"""
 
 
 def get_claim_type_str(claim: Claim) -> str:
-    """Extract claim type as string."""
     claim_type = getattr(claim, "claim_type", None)
     if isinstance(claim_type, ClaimType):
         return claim_type.value
@@ -64,7 +61,6 @@ def get_claim_type_str(claim: Claim) -> str:
 
 
 def fallback_query_plan(claim: Claim) -> Dict[str, Any]:
-    """Generate fallback query plan when LLM is unavailable."""
     base_queries = generate_queries(claim, max_queries=5)
     return {
         "domain": "unknown",

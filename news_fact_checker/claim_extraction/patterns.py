@@ -1,5 +1,3 @@
-"""Regex patterns for claim detection."""
-
 from __future__ import annotations
 
 import re
@@ -7,7 +5,6 @@ from typing import Pattern
 
 
 class ClaimPatterns:
-    """Compiled regex patterns for efficient claim detection."""
 
     def __init__(self):
         self.number_pattern: Pattern = re.compile(

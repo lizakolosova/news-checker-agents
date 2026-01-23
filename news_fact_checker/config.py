@@ -1,13 +1,3 @@
-"""
-Production-ready configuration with conservative defaults.
-
-KEY CHANGES:
-1. Higher quality thresholds
-2. Require Tier-1 sources for strong verdicts
-3. Stricter consensus thresholds
-4. Better rate limit handling
-"""
-
 from __future__ import annotations
 
 import os
@@ -17,7 +7,6 @@ from typing import Set, Tuple
 
 @dataclass
 class ClaimExtractionConfig:
-    """Configuration for claim extraction agent."""
     min_confidence: float = 0.5
     similarity_threshold: float = 0.85
     context_window: int = 1
@@ -36,7 +25,6 @@ class ClaimExtractionConfig:
 
 @dataclass
 class ResearchConfig:
-    """Configuration for Research Agent (PRODUCTION MODE)."""
 
     max_results: int = 5
     per_query_results: int = 5
@@ -85,7 +73,6 @@ class ResearchConfig:
 
 @dataclass
 class EvidenceConfig:
-    """Configuration for Evidence Evaluation Agent (PRODUCTION MODE)."""
 
     groq_api_key: str = field(default_factory=lambda: os.getenv("GROQ_API_KEY", ""))
 
@@ -150,11 +137,10 @@ class EvidenceConfig:
 
     low_credibility_sources: Set[str] = field(default_factory=lambda: {
         'infowars.com', 'naturalnews.com', 'beforeitsnews.com',
-        'quora.com', 'reddit.com',  # NEW
+        'quora.com', 'reddit.com',
     })
 
     def __post_init__(self):
-        """Validate configuration."""
         total_weight = self.domain_weight + self.quality_weight + self.recency_weight
         if abs(total_weight - 1.0) > 0.01:
             raise ValueError(f"Scoring weights must sum to 1.0, got {total_weight:.3f}")
@@ -162,7 +148,6 @@ class EvidenceConfig:
 
 @dataclass
 class VerdictConfig:
-    """Configuration for Verdict Agent (NEW)."""
 
     true_min_confidence: float = 0.80
     mostly_true_min_confidence: float = 0.65

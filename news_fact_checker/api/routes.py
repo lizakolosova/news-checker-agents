@@ -5,18 +5,15 @@ import structlog
 from fastapi import APIRouter
 
 from news_fact_checker.claim_extraction.agent import ClaimExtractionAgent
-from news_fact_checker.evidence.evidence_agent import EvidenceEvaluationAgent
+from news_fact_checker.evidence.agent import EvidenceEvaluationAgent
 from news_fact_checker.research.agent import ResearchAgent
-from news_fact_checker.verdict.verdict_agent import VerdictAgent
+from news_fact_checker.verdict.agent import VerdictAgent
 from .schemas import ArticleRequest
 
 logger = structlog.get_logger().bind(component="api")
 router = APIRouter()
 
 def run_factcheck_pipeline(payload: ArticleRequest) -> dict:
-    """
-    Sync pipeline. Keep it sync and run it in a threadpool from the async route.
-    """
     t0 = time.time()
 
     extractor = ClaimExtractionAgent()

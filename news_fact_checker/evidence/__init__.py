@@ -1,8 +1,3 @@
-"""
-Evidence Evaluation Agent Package
-Assesses source credibility and evidence quality for fact-checking.
-"""
-
 from .agent import EvidenceEvaluationAgent
 from .credibility_scorer import CredibilityScorer
 from .quality_assessor import QualityAssessor

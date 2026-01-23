@@ -5,15 +5,6 @@ from typing import Any, List, Dict, Optional
 
 
 def _normalize_confidence(confidence: Any) -> int:
-    """
-    Normalize confidence to 0-100 integer.
-
-    Args:
-        confidence: Can be float (0-1 or 0-100), int, or string
-
-    Returns:
-        int: Confidence as percentage (0-100)
-    """
     try:
         value = float(confidence)
         if 0.0 <= value <= 100.0:
@@ -27,7 +18,6 @@ def _normalize_confidence(confidence: Any) -> int:
 
 
 def _get_consensus_description(consensus: str) -> str:
-    """Get human-readable description of consensus level."""
     descriptions = {
         "strong_support": "strongly supported by credible sources",
         "strong_refutation": "clearly contradicted by evidence",
@@ -40,7 +30,6 @@ def _get_consensus_description(consensus: str) -> str:
 
 
 def _count_sources_by_stance(sources: List[Dict]) -> Dict[str, int]:
-    """Count sources by their stance classification."""
     counts = {"supports": 0, "refutes": 0, "unclear": 0}
 
     for source in sources:
@@ -52,7 +41,6 @@ def _count_sources_by_stance(sources: List[Dict]) -> Dict[str, int]:
 
 
 def _get_tier_distribution(sources: List[Dict]) -> Dict[int, int]:
-    """Get distribution of sources across credibility tiers."""
     tiers = {1: 0, 2: 0, 3: 0, 0: 0}
 
     for source in sources:
@@ -64,7 +52,6 @@ def _get_tier_distribution(sources: List[Dict]) -> Dict[int, int]:
 
 
 def _calculate_avg_credibility(sources: List[Dict]) -> float:
-    """Calculate average credibility score across sources."""
     if not sources:
         return 0.0
 
@@ -78,18 +65,6 @@ def generate_reasoning(
     consensus: str,
     confidence: Optional[float] = None,
 ) -> str:
-    """
-    Generate human-readable reasoning for a fact-check verdict.
-
-    Args:
-        claim: The claim being fact-checked
-        sources: List of evaluated evidence sources
-        consensus: Consensus level (strong_support, likely_true, etc.)
-        confidence: Optional confidence score
-
-    Returns:
-        str: Human-readable explanation
-    """
     if not sources:
         return (
             "No reliable evidence sources were found to evaluate this claim. "
@@ -173,18 +148,4 @@ class ReasoningGenerator:
         self.logger = logger
 
     def generate( self,  claim: str,  sources: List[Dict],consensus: str,confidence: Optional[float] = None,) -> str:
-        """
-        Generate reasoning explanation.
-
-        This is a convenience wrapper around the module-level function.
-
-        Args:
-            claim: The claim being evaluated
-            sources: Evaluated evidence sources
-            consensus: Consensus level
-            confidence: Optional confidence score
-
-        Returns:
-            str: Human-readable explanation
-        """
         return generate_reasoning(claim, sources, consensus, confidence)

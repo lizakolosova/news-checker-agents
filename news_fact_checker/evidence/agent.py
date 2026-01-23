@@ -1,4 +1,3 @@
-"""Main Evidence Evaluation Agent - Final Fix."""
 from news_fact_checker.research.scoring import evidence_fit, assess_recency, empty_evaluation, calculate_overall_credibility, calculate_average_quality, calculate_confidence
 from typing import List, Optional, Dict, Any
 
@@ -12,7 +11,6 @@ from news_fact_checker.evidence.reasoning_generator import ReasoningGenerator, g
 from news_fact_checker.evidence.stance_classifier import deterministic_stance_classification, StanceResult
 
 class EvidenceEvaluationAgent:
-    """Evidence Evaluation Agent with implicit refutation for poor fits."""
 
     def __init__(self, config: Optional[EvidenceConfig] = None):
         self.config = config or DEFAULT_EVIDENCE_CONFIG
@@ -36,9 +34,6 @@ class EvidenceEvaluationAgent:
         claim: str,
         evidence_list: List[Dict]
     ) -> Dict[str, Any]:
-        """
-        Main evaluation pipeline with implicit refutation for poor evidence fits.
-        """
         if not evidence_list:
             self.logger.warning("empty_evidence_list", claim=claim[:100])
             return empty_evaluation()
@@ -49,7 +44,6 @@ class EvidenceEvaluationAgent:
             num_sources=len(evidence_list)
         )
 
-        # Step 1: Evaluate each source
         evaluated_sources = []
         for evidence in evidence_list:
             evaluated = self._evaluate_single_source(claim, evidence)
@@ -72,7 +66,6 @@ class EvidenceEvaluationAgent:
             overall_cred = calculate_overall_credibility(evaluated_sources)
             avg_quality = calculate_average_quality(evaluated_sources)
 
-            # Generate special reasoning for poor fit
             reasoning = (
                 f"The available evidence does not adequately support this claim. "
                 f"With an average evidence fit of {avg_fit:.0%}, sources either reference "
@@ -101,13 +94,11 @@ class EvidenceEvaluationAgent:
 
             return result
 
-        # Step 3: Normal consensus detection
         consensus = self.consensus_detector.detect_consensus(
             evaluated_sources,
             claim=claim
         )
 
-        # Step 4: Downgrade strong consensus if fit is weak
         max_fit = max(
             s.get("evidence_fit", 1.0) for s in evaluated_sources
         ) if evaluated_sources else 0.0
@@ -116,12 +107,10 @@ class EvidenceEvaluationAgent:
             consensus = "likely_true" if consensus == "strong_support" else "likely_false"
             self.logger.info("consensus_downgraded", reason="weak_evidence_fit", max_fit=max_fit)
 
-        # Step 5: Calculate metrics
         overall_cred = calculate_overall_credibility(evaluated_sources)
         avg_quality = calculate_average_quality(evaluated_sources)
         confidence = calculate_confidence(evaluated_sources, consensus)
 
-        # Step 6: Generate reasoning
         if self.reasoning_generator:
             reasoning = generate_reasoning(
                 claim,
@@ -161,14 +150,7 @@ class EvidenceEvaluationAgent:
         return result
 
     def _evaluate_single_source(self, claim: str, evidence: Dict) -> Dict:
-        """Evaluate a single evidence source.
 
-        Responsibilities here:
-        - Classify stance (supports / refutes / unclear)
-        - Score domain credibility, quality, recency, and fit
-        """
-
-        # 1) Stance classification (done here, not in ResearchAgent)
         try:
             stance_res: StanceResult = deterministic_stance_classification(
                 claim_text=claim,
@@ -187,12 +169,10 @@ class EvidenceEvaluationAgent:
             stance_label = "unclear"
             stance_confidence = 0.5
 
-        # 2) Domain credibility
         domain_score = self.credibility_scorer.assess_domain_credibility(
             evidence["source_url"]
         )
 
-        # 3) Evidence quality (uses claim, snippet, stance label)
         if self.quality_assessor:
             quality_score = assess_evidence_quality(
                 claim,
@@ -202,18 +182,15 @@ class EvidenceEvaluationAgent:
         else:
             quality_score = 0.6 if stance_label in {"supports", "refutes"} else 0.4
 
-        # 4) Recency & fit
         recency_score = assess_recency(evidence.get("published_date"))
         fit_score = evidence_fit(claim, evidence)
 
-        # 5) Final score (same weighting logic as before)
         final_score = (
                 domain_score * self.config.domain_weight
                 + quality_score * self.config.quality_weight
                 + recency_score * self.config.recency_weight
         )
 
-        # 6) Return enriched evidence object
         return {
             **evidence,
             "stance": stance_label,
@@ -227,7 +204,6 @@ class EvidenceEvaluationAgent:
         }
 
     def batch_evaluate(self, claims_with_evidence: List[Dict]) -> List[Dict]:
-        """Evaluate multiple claims in batch."""
         results = []
         for item in claims_with_evidence:
             result = self.evaluate_evidence(

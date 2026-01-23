@@ -3,6 +3,8 @@ import json
 import re
 import structlog
 
+from news_fact_checker.research.utils import fallback_query_plan
+
 logger = structlog.get_logger().bind(component="research_parsing")
 
 def parse_llm_response(
@@ -10,15 +12,6 @@ def parse_llm_response(
     claim: Any,
     trace_id: str,
 ) -> Dict[str, Any]:
-    """
-    Parse and validate LLM response into query plan.
-
-    Handles:
-    - Extra text before/after JSON
-    - Markdown code blocks
-    - Malformed JSON with missing braces
-    - Python tuple syntax in lists
-    """
     plan: Dict[str, Any] = {
         "domain": "unknown",
         "authority_queries": [],

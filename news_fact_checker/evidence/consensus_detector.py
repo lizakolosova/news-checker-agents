@@ -1,5 +1,3 @@
-"""Consensus detection across multiple evidence sources."""
-
 from __future__ import annotations
 
 import re
@@ -33,11 +31,6 @@ def _looks_like_attribution_claim(claim: str) -> bool:
 
 
 def _extract_attribution_entities(claim: str) -> List[str]:
-    """
-    Very lightweight attribution-entity extraction.
-    We look for the phrase after 'according to' up to punctuation.
-    This is intentionally heuristic (generic; no NER dependency).
-    """
     c = (claim or "").strip()
     m = re.search(r"(?i)\baccording to\s+([^.,;:]+)", c)
     if not m:
@@ -50,12 +43,6 @@ def _extract_attribution_entities(claim: str) -> List[str]:
 
 
 def _authority_penalty(claim: str, source_url: str, source_title: str, snippet: str) -> float:
-    """
-    If the claim is attributed ("according to X"), reduce weight for sources
-    that don't appear to match X.
-
-    This is generic: it uses the attribution entity found in the claim.
-    """
     if not _looks_like_attribution_claim(claim):
         return 1.0
 
@@ -76,42 +63,22 @@ def _authority_penalty(claim: str, source_url: str, source_title: str, snippet: 
 
 
 def _temporal_penalty(claim: str, text: str) -> Tuple[float, str]:
-    """
-    Hard temporal grounding:
-    - If claim specifies a year and evidence specifies a different year -> strong penalty.
-    - If claim specifies a month and evidence specifies a different month -> moderate penalty.
-    Returns (penalty_multiplier, reason)
-    """
     claim_years = _extract_years(claim)
     ev_years = _extract_years(text)
 
     if claim_years and ev_years and claim_years.isdisjoint(ev_years):
-        return 0.10, "year_mismatch"  # near-zero weight
+        return 0.10, "year_mismatch"
 
     claim_months = _extract_months(claim)
     ev_months = _extract_months(text)
 
     if claim_months and ev_months and claim_months.isdisjoint(ev_months):
-        return 0.35, "month_mismatch"  # downweight heavily
+        return 0.35, "month_mismatch"
 
     return 1.0, "ok"
 
 
 def _calculate_weighted_stances(claim: str, sources: List[Dict]) -> Tuple[float, float, float, Dict[str, int]]:
-    """
-    Calculate weighted support and refutation.
-
-    Base weight = credibility_score * relevance_score * quality_score
-                  * evidence_fit * recency_score * stance_confidence
-
-    Then apply:
-      - temporal penalty (year/month mismatch)
-      - attribution authority penalty ("according to X")
-
-    Notes:
-    - Only supports/refutes contribute to total_weight (denominator).
-    - 'unclear' does not dilute the denominator.
-    """
     weighted_support = 0.0
     weighted_refute = 0.0
     total_weight = 0.0
@@ -143,7 +110,6 @@ def _calculate_weighted_stances(claim: str, sources: List[Dict]) -> Tuple[float,
         elif t_reason == "month_mismatch":
             debug_counts["month_mismatch"] += 1
 
-        # Attribution authority grounding
         a_pen = _authority_penalty(
             claim=claim,
             source_url=source.get("source_url", "") or "",
@@ -189,7 +155,6 @@ def _classify_consensus(
 
 
 class ConsensusDetector:
-    """Detects consensus level across multiple evidence sources via weighted voting."""
 
     STRONG_THRESHOLD = 0.75
     LIKELY_THRESHOLD = 0.60

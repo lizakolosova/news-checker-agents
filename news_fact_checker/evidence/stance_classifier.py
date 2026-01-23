@@ -36,11 +36,6 @@ def _extract_numbers(text: str) -> Set[str]:
 
 
 def _numbers_compatible(claim: str, evidence: str) -> bool:
-    """
-    Fuzzy numeric compatibility:
-    - If the claim has numbers, require at least one roughly matching number
-      (allows small rounding differences).
-    """
     claim_nums = _extract_numbers(claim)
     if not claim_nums:
         return True

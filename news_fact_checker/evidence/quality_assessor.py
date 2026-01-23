@@ -1,15 +1,3 @@
-"""Heuristic evidence quality assessment (no paid API).
-
-This module keeps the *same public interface* as the original Groq-based
-`QualityAssessor` so the rest of the pipeline can stay unchanged.
-
-- No external network calls.
-- Deterministic scoring.
-- Constructor still accepts `(groq_client, logger)` but the client is ignored.
-
-The public method `assess_evidence_quality(...)` returns a float in [0, 1].
-"""
-
 from __future__ import annotations
 
 import re
@@ -19,10 +7,6 @@ def assess_evidence_quality(
     snippet: str = "",
     stance: str = "unclear",
 ) -> float:
-    """
-    Deterministic quality scoring (Groq removed).
-    Signature matches evidence_agent expectations.
-    """
 
     if stance not in {"supports", "refutes"}:
         return 0.35

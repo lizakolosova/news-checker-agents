@@ -1,5 +1,3 @@
-"""Extraction utilities for entities, numbers, and temporal markers."""
-
 from __future__ import annotations
 
 from typing import List, Dict, Any
@@ -7,7 +5,6 @@ from news_fact_checker.claim_extraction.patterns import ClaimPatterns
 
 
 class EntityExtractor:
-    """Extracts named entities from text using regex + light filtering."""
 
     def __init__(self, patterns: ClaimPatterns):
         self.patterns = patterns
@@ -42,7 +39,6 @@ class EntityExtractor:
 
 
 class NumberExtractor:
-    """Extracts numerical data from text."""
 
     def __init__(self, patterns: ClaimPatterns):
         self.patterns = patterns
@@ -60,7 +56,6 @@ class NumberExtractor:
 
 
 class TemporalExtractor:
-    """Extracts temporal markers from text."""
 
     def __init__(self, patterns: ClaimPatterns):
         self.patterns = patterns

@@ -27,19 +27,16 @@ def assess_recency(published_date: Optional[str] = None) -> float:
 
 
 def evidence_fit(claim: str, evidence: Dict[str, Any]) -> float:
-    """How well evidence matches claim (enhanced with report date validation)."""
     text = f"{evidence.get('source_title', '')} {evidence.get('snippet', '')}".lower()
     c = (claim or "").lower()
 
-    # NEW: Report date validation
     claim_report_dates = re.findall(r"report from (\w+ \d{4})", c)
     if claim_report_dates:
         pub_date = evidence.get("published_date", "")
         for report_date in claim_report_dates:
             if report_date.lower() not in text and report_date.lower() not in pub_date.lower():
-                return 0.15  # Severe penalty for wrong report date
+                return 0.15
 
-    # Existing numeric/year/keyword matching
     claim_nums = re.findall(r"\b\d+(?:\.\d+)?\b", c)
     ev_nums = set(re.findall(r"\b\d+(?:\.\d+)?\b", text))
     num_match = 1.0
@@ -62,7 +59,6 @@ def evidence_fit(claim: str, evidence: Dict[str, Any]) -> float:
 
 
 def calculate_overall_credibility(sources: List[Dict]) -> float:
-    """Calculate weighted average credibility across all sources."""
     if not sources:
         return 0.0
 
@@ -87,14 +83,12 @@ def calculate_overall_credibility(sources: List[Dict]) -> float:
 
 
 def calculate_average_quality(sources: List[Dict]) -> float:
-    """Calculate average evidence quality across all sources."""
     if not sources:
         return 0.0
     return sum(s['quality_score'] for s in sources) / len(sources)
 
 
 def calculate_confidence(sources: List[Dict], consensus: str) -> float:
-    """Enhanced confidence calculation."""
     if not sources:
         return 0.0
 
@@ -126,7 +120,6 @@ def calculate_confidence(sources: List[Dict], consensus: str) -> float:
         0.10 * avg_quality
     )
 
-    # Cap based on fit
     if max_fit < 0.30:
         base = min(base, 0.40)
     elif max_fit < 0.50:
@@ -138,7 +131,6 @@ def calculate_confidence(sources: List[Dict], consensus: str) -> float:
 
 
 def empty_evaluation() -> Dict[str, Any]:
-    """Return default evaluation when no evidence is provided."""
     return {
         "claim_id": "unknown",
         "retrieval_status": "no_evidence",
