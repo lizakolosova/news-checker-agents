@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import List, Dict, Optional
 
-from news_fact_checker.evidence.models import EvaluatedSource
-from news_fact_checker.evidence.utils import normalize_confidence, count_by_key
-from news_fact_checker.evidence.constants import (
+from news_fact_checker.evidence_evaluation.models import EvaluatedSource
+from news_fact_checker.evidence_evaluation.utils import normalize_confidence, count_by_key
+from news_fact_checker.evidence_evaluation.constants import (
     CONSENSUS_DESCRIPTIONS,
     HIGH_CONFIDENCE_THRESHOLD,
     MODERATE_CONFIDENCE_THRESHOLD,
@@ -56,8 +56,8 @@ class ReasoningBuilder:
     ) -> str:
         if not sources:
             return (
-                "No reliable evidence sources were found to evaluate this claim. "
-                "Without supporting or refuting evidence, the claim cannot be verified."
+                "No reliable evidence_evaluation sources were found to evaluate this claim. "
+                "Without supporting or refuting evidence_evaluation, the claim cannot be verified."
             )
 
         parts = [self._get_consensus_statement(consensus), self._get_source_description(sources)]
@@ -73,7 +73,7 @@ class ReasoningBuilder:
     @staticmethod
     def _get_consensus_statement(consensus: str) -> str:
         description = CONSENSUS_DESCRIPTIONS.get(
-            consensus, "unclear evidence"
+            consensus, "unclear evidence_evaluation"
         )
         return f"This claim is {description}."
 
@@ -112,17 +112,17 @@ class ReasoningBuilder:
                 "Multiple sources directly contradict the central facts of this claim."
             ),
             "likely_true": (
-                "While not definitively proven, the preponderance of evidence supports this claim."
+                "While not definitively proven, the preponderance of evidence_evaluation supports this claim."
             ),
             "likely_false": (
-                "While not definitively disproven, the preponderance of evidence contradicts this claim."
+                "While not definitively disproven, the preponderance of evidence_evaluation contradicts this claim."
             ),
             "mixed": (
                 "Different credible sources provide conflicting information, "
                 "suggesting the claim may be partially accurate or context-dependent."
             ),
             "insufficient": (
-                "Available evidence is too limited or unclear to make a determination."
+                "Available evidence_evaluation is too limited or unclear to make a determination."
             ),
         }
         return elaborations.get(consensus, "")

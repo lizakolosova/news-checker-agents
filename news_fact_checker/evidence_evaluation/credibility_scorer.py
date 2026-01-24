@@ -7,10 +7,10 @@ from dataclasses import dataclass, field
 
 import structlog
 
-from news_fact_checker.evidence.config import EvidenceConfig
-from news_fact_checker.evidence.models import DomainReputation
-from news_fact_checker.evidence.utils import extract_domain
-from news_fact_checker.evidence.constants import (
+from news_fact_checker.evidence_evaluation.config import EvidenceConfig
+from news_fact_checker.evidence_evaluation.models import DomainReputation
+from news_fact_checker.evidence_evaluation.utils import extract_domain
+from news_fact_checker.evidence_evaluation.constants import (
     STRUCTURAL_SCORES,
     UGC_PENALTY,
     LLM_SCORE_MULTIPLIER_RANGE,

@@ -83,7 +83,7 @@ SUPPORT_CUES: Tuple[str, ...] = (
 
 REFUTE_CUES: Tuple[str, ...] = (
     "false", "falsely", "debunked", "debunks", "incorrect", "wrong",
-    "misleading", "no evidence", "denied", "deny", "denies", "did not",
+    "misleading", "no evidence_evaluation", "denied", "deny", "denies", "did not",
     "didn't", "has not", "haven't", "never happened", "contradicts",
     "disputed", "disputes",
 )
@@ -105,11 +105,11 @@ MONTHS: Tuple[str, ...] = (
 
 CONSENSUS_DESCRIPTIONS = {
     "strong_support": "strongly supported by credible sources",
-    "strong_refutation": "clearly contradicted by evidence",
-    "likely_true": "likely accurate based on available evidence",
-    "likely_false": "likely inaccurate based on available evidence",
-    "mixed": "evidence shows conflicting information",
-    "insufficient": "insufficient evidence to determine accuracy",
+    "strong_refutation": "clearly contradicted by evidence_evaluation",
+    "likely_true": "likely accurate based on available evidence_evaluation",
+    "likely_false": "likely inaccurate based on available evidence_evaluation",
+    "mixed": "evidence_evaluation shows conflicting information",
+    "insufficient": "insufficient evidence_evaluation to determine accuracy",
 }
 
 HIGH_CONFIDENCE_THRESHOLD = 80

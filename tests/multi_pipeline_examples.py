@@ -7,7 +7,7 @@ from typing import Dict, List
 
 from news_fact_checker.claim_extraction.agent import ClaimExtractionAgent
 from news_fact_checker.research.agent import ResearchAgent
-from news_fact_checker.evidence.agent import EvidenceEvaluationAgent
+from news_fact_checker.evidence_evaluation.agent import EvidenceEvaluationAgent
 from news_fact_checker.verdict.agent import VerdictAgent
 from news_fact_checker.verdict.explanation_generator import VerdictRating
 
@@ -40,7 +40,7 @@ def run_article(name: str, text: str, num_claims_to_check: int = 3) -> Dict:
     claims_to_check = claims[:num_claims_to_check]
     print(f"\n🔍 Fact-checking top {len(claims_to_check)} claims...")
 
-    print("\n📚 AGENT 2 - Researching evidence...")
+    print("\n📚 AGENT 2 - Researching evidence_evaluation...")
     research_results = research_agent.research_claims(claims_to_check)
 
     for i, rr in enumerate(research_results, start=1):
@@ -48,15 +48,15 @@ def run_article(name: str, text: str, num_claims_to_check: int = 3) -> Dict:
         domains = ", ".join(meta.get("detected_domains", []))
         quality = meta.get("quality_score", 0)
         tier1 = meta.get("tier1_sources", 0)
-        print(f"  Claim {i}: {len(rr['evidence'])} sources | "
+        print(f"  Claim {i}: {len(rr['evidence_evaluation'])} sources | "
               f"Domains: {domains} | Quality: {quality:.2f} | Tier-1: {tier1}")
 
-    print("\n⚖️  AGENT 3 - Evaluating evidence quality...")
+    print("\n⚖️  AGENT 3 - Evaluating evidence_evaluation quality...")
     evaluations = []
     for rr in research_results:
         ev = evidence_agent.evaluate(
             claim=rr["original_claim"],
-            evidence_list=rr["evidence"]
+            evidence_list=rr["evidence_evaluation"]
         )
         evaluations.append(ev)
 
@@ -350,7 +350,7 @@ def main():
     print(f"   Total claims extracted: {total_claims}")
     print(f"   Claims fact-checked: {claims_checked}")
     print(f"   Average confidence: {avg_confidence:.0%}")
-    print(f"   Average evidence quality: {avg_quality:.0%}")
+    print(f"   Average evidence_evaluation quality: {avg_quality:.0%}")
     print(f"   Articles processed: {len(results)}")
 
     # Confidence breakdown

@@ -4,13 +4,13 @@ import re
 from typing import Set, List, Dict, Any
 from urllib.parse import urlparse
 
-from news_fact_checker.evidence.constants import (
+from news_fact_checker.evidence_evaluation.constants import (
     NUMBER_COMPATIBILITY_THRESHOLD,
     MIN_KEY_TERM_LENGTH,
     MONTHS,
 )
 
-from news_fact_checker.evidence.constants import ATTRIBUTION_PATTERNS
+from news_fact_checker.evidence_evaluation.constants import ATTRIBUTION_PATTERNS
 
 
 def safe_float(value: Any, default: float = 0.0) -> float:

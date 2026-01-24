@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from news_fact_checker.evidence.constants import (
+from news_fact_checker.evidence_evaluation.constants import (
     DEFAULT_DOMAIN_WEIGHT,
     DEFAULT_QUALITY_WEIGHT,
     DEFAULT_RECENCY_WEIGHT,

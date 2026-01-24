@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import structlog
 
-from news_fact_checker.evidence.models import StanceResult
-from news_fact_checker.evidence.utils import (
+from news_fact_checker.evidence_evaluation.models import StanceResult
+from news_fact_checker.evidence_evaluation.utils import (
     numbers_compatible,
     calculate_term_overlap,
 )
-from news_fact_checker.evidence.constants import (
+from news_fact_checker.evidence_evaluation.constants import (
     SUPPORT_CUES,
     REFUTE_CUES,
     MIN_TERM_OVERLAP_COUNT,
@@ -51,7 +51,7 @@ class StanceClassifier:
             return StanceResult(
                 label="unclear",
                 confidence=0.55,
-                reason="Numbers/dates in evidence differ substantially from the claim",
+                reason="Numbers/dates in evidence_evaluation differ substantially from the claim",
             )
 
         has_support_cues = self._has_support_language(evidence_text)

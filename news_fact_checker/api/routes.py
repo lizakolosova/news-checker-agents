@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException
 from dotenv import load_dotenv
 
 from news_fact_checker.claim_extraction.agent import ClaimExtractionAgent
-from news_fact_checker.evidence.agent import EvidenceEvaluationAgent
+from news_fact_checker.evidence_evaluation.agent import EvidenceEvaluationAgent
 from news_fact_checker.research.agent import ResearchAgent
 from news_fact_checker.research.config import ResearchConfig
 from news_fact_checker.verdict.agent import VerdictAgent
@@ -34,7 +34,7 @@ def run_factcheck_pipeline(payload: ArticleRequest) -> dict:
             search_api_key=api_key,
             min_evidence=3,
             max_evidence=10,
-            enable_llm_planning=False,
+            enable_llm_planning=True,
         )
         researcher = ResearchAgent(research_config)
 
@@ -47,7 +47,18 @@ def run_factcheck_pipeline(payload: ArticleRequest) -> dict:
         logger.info("claims_extracted", count=len(claims))
 
         logger.info("researching_evidence", claim_count=len(claims))
-        research_results = researcher.research(claims)
+
+        try:
+            research_results = researcher.research(claims)
+        except Exception as e:
+            logger.error("research_failed_completely", error=str(e), error_type=type(e).__name__)
+            research_results = [{
+                "claim_id": c.claim_id,
+                "original_claim": c.text,
+                "evidence": [],
+                "metadata": {"quality_score": 0.0}
+            } for c in claims]
+
         logger.info("research_completed", results_count=len(research_results))
 
         by_claim_id = {r["claim_id"]: r for r in research_results}
@@ -113,9 +124,19 @@ async def fact_check_article(payload: ArticleRequest):
 async def health_check():
     api_key = os.getenv("SERPER_API_KEY")
 
+    ollama_available = False
+    try:
+        from ollama import Client as OllamaClient
+        client = OllamaClient()
+        client.list()
+        ollama_available = True
+    except:
+        pass
+
     return {
         "status": "healthy",
         "serper_api_configured": bool(api_key),
+        "ollama_available": ollama_available,
         "timestamp": int(time.time()),
     }
 

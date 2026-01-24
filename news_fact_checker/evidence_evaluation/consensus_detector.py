@@ -3,16 +3,16 @@ from __future__ import annotations
 from typing import List, Dict, Tuple
 import structlog
 
-from news_fact_checker.evidence.models import ConsensusMetrics, EvaluatedSource
-from news_fact_checker.evidence.config import EvidenceConfig, DEFAULT_EVIDENCE_CONFIG
-from news_fact_checker.evidence.utils import (
+from news_fact_checker.evidence_evaluation.models import ConsensusMetrics, EvaluatedSource
+from news_fact_checker.evidence_evaluation.config import EvidenceConfig, DEFAULT_EVIDENCE_CONFIG
+from news_fact_checker.evidence_evaluation.utils import (
     safe_float,
     extract_years,
     extract_months,
     looks_like_attribution_claim,
     extract_attribution_entities,
 )
-from news_fact_checker.evidence.constants import (
+from news_fact_checker.evidence_evaluation.constants import (
     MIN_TOTAL_WEIGHT,
     TEMPORAL_PENALTY_YEAR_MISMATCH,
     TEMPORAL_PENALTY_MONTH_MISMATCH,

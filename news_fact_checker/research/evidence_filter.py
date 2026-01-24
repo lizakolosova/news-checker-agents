@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 import structlog
 
 from news_fact_checker.claim_extraction.models import Claim
@@ -33,7 +33,8 @@ class DomainFilter:
 
 class RelevanceScorer:
 
-    def score(self, claim: Claim, results: List[SearchResult]) -> List[EvidenceItem]:
+    @staticmethod
+    def score(claim: Claim, results: List[SearchResult]) -> List[EvidenceItem]:
         scored: List[EvidenceItem] = []
 
         for result in results:
@@ -46,19 +47,21 @@ class RelevanceScorer:
 
             relevance = calculate_text_similarity(claim.text, text)
 
-            scored.append(EvidenceItem(
-                source_url=result.get("url", ""),
-                source_title=result.get("title", ""),
-                snippet=(snippet or title)[:SNIPPET_MAX_LENGTH],
-                relevance_score=round(relevance, 3),
-                base_relevance=relevance,
-                authority_weight=0.0,
-            ))
+            scored.append({
+                "source_url": result.get("url", ""),
+                "source_title": result.get("title", ""),
+                "snippet": (snippet or title)[:SNIPPET_MAX_LENGTH],
+                "relevance_score": round(relevance, 3),
+                "base_relevance": relevance,
+                "authority_weight": 0.0,
+                "claim_id": claim.claim_id,
+                "published_date": None,
+            })
 
         return scored
 
+    @staticmethod
     def filter_by_relevance(
-            self,
             scored: List[EvidenceItem],
             min_relevance: float,
             keep_top_k: int,

@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 
-from news_fact_checker.evidence.constants import (
+from news_fact_checker.evidence_evaluation.constants import (
     BASE_QUALITY_SCORE,
     UNCLEAR_STANCE_SCORE,
     NUMBER_MATCH_BONUS,
     SNIPPET_MIN_LENGTH,
     SNIPPET_PENALTY
 )
-from news_fact_checker.evidence.utils import extract_numbers, to_float
+from news_fact_checker.evidence_evaluation.utils import extract_numbers, to_float
 
 
 class QualityAssessor:

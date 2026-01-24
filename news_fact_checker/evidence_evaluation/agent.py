@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import List, Optional
 import structlog
 
-from news_fact_checker.evidence.config import EvidenceConfig, DEFAULT_EVIDENCE_CONFIG
-from news_fact_checker.evidence.models import EvaluatedSource, EvaluationResult, EvidenceSource
-from news_fact_checker.evidence.credibility_scorer import CredibilityScorer
-from news_fact_checker.evidence.quality_assessor import QualityAssessor
-from news_fact_checker.evidence.consensus_detector import ConsensusDetector
-from news_fact_checker.evidence.reasoning_generator import ReasoningGenerator
-from news_fact_checker.evidence.stance_classifier import StanceClassifier
-from news_fact_checker.evidence.scoring import (
+from news_fact_checker.evidence_evaluation.config import EvidenceConfig, DEFAULT_EVIDENCE_CONFIG
+from news_fact_checker.evidence_evaluation.models import EvaluatedSource, EvaluationResult, EvidenceSource
+from news_fact_checker.evidence_evaluation.credibility_scorer import CredibilityScorer
+from news_fact_checker.evidence_evaluation.quality_assessor import QualityAssessor
+from news_fact_checker.evidence_evaluation.consensus_detector import ConsensusDetector
+from news_fact_checker.evidence_evaluation.reasoning_generator import ReasoningGenerator
+from news_fact_checker.evidence_evaluation.stance_classifier import StanceClassifier
+from news_fact_checker.evidence_evaluation.scoring import (
     score_recency,
     score_fit,
     calculate_overall_credibility,
@@ -18,7 +18,7 @@ from news_fact_checker.evidence.scoring import (
     calculate_confidence,
     create_empty_evaluation,
 )
-from news_fact_checker.evidence.constants import (
+from news_fact_checker.evidence_evaluation.constants import (
     WEAK_FIT_THRESHOLD,
     STRONG_FIT_DOWNGRADE_THRESHOLD,
     IMPLICIT_REFUTATION_CONFIDENCE_BASE,
@@ -58,8 +58,8 @@ class ImplicitRefutationDetector:
         avg_quality = calculate_average_quality(evaluated_sources)
 
         reasoning = (
-            f"The available evidence does not adequately support this claim. "
-            f"With an average evidence fit of {avg_fit:.0%}, sources either reference "
+            f"The available evidence_evaluation does not adequately support this claim. "
+            f"With an average evidence_evaluation fit of {avg_fit:.0%}, sources either reference "
             f"different time periods, different metrics, or conflicting data. "
             f"This suggests the claim as stated is likely inaccurate."
         )
@@ -260,7 +260,7 @@ class EvidenceEvaluationAgent:
         for item in claims_with_evidence:
             result = self.evaluate(
                 claim=item["claim"],
-                evidence_list=item["evidence"],
+                evidence_list=item["evidence_evaluation"],
             )
             results.append(result)
 

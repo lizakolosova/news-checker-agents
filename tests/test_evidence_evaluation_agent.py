@@ -1,6 +1,6 @@
 import pytest
 
-from news_fact_checker.evidence import EvidenceEvaluationAgent
+from news_fact_checker.evidence_evaluation import EvidenceEvaluationAgent
 
 from news_fact_checker.config import DEFAULT_EVIDENCE_CONFIG
 
@@ -63,11 +63,11 @@ def test_batch_evaluate(agent, valid_evidence):
     batch = [
         {
             "claim": "The economy grew by 3 percent in 2023.",
-            "evidence": [valid_evidence],
+            "evidence_evaluation": [valid_evidence],
         },
         {
             "claim": "Inflation reached 20 percent in 1990.",
-            "evidence": [],
+            "evidence_evaluation": [],
         },
     ]
 

@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import List, Optional
 from datetime import datetime
 
-from news_fact_checker.evidence.models import EvaluatedSource, EvaluationResult
-from news_fact_checker.evidence.utils import safe_float
+from news_fact_checker.evidence_evaluation.models import EvaluatedSource, EvaluationResult
+from news_fact_checker.evidence_evaluation.utils import safe_float
 
 
 class RecencyScorer:
@@ -158,5 +158,5 @@ def create_empty_evaluation() -> EvaluationResult:
         "consensus_level": "insufficient",
         "evaluated_sources": [],
         "confidence": 0.0,
-        "reasoning": "No evidence sources were provided for evaluation.",
+        "reasoning": "No evidence_evaluation sources were provided for evaluation.",
     }
