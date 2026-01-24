@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(override=True)
 
 from typing import Dict, List
 
@@ -116,7 +116,6 @@ def run_article(name: str, text: str, num_claims_to_check: int = 3) -> Dict:
 
 
 def main():
-    """Run comprehensive multi-domain test suite."""
 
     print("\n" + "🔬" * 45)
     print("MULTI-DOMAIN NEWS FACT-CHECKER")

@@ -1,5 +1,3 @@
-"""Consensus detection for evidence evaluation."""
-
 from __future__ import annotations
 
 from typing import List, Dict, Tuple

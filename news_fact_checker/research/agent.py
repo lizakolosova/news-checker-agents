@@ -72,7 +72,8 @@ class QueryPlanGenerator:
             )
             return self.query_strategy.create_fallback_plan(claim)
 
-    def _get_claim_type_str(self, claim: Claim) -> str:
+    @staticmethod
+    def _get_claim_type_str(claim: Claim) -> str:
         claim_type = getattr(claim, "claim_type", None)
         if hasattr(claim_type, "value"):
             return claim_type.value
@@ -161,8 +162,8 @@ class EvidenceRetriever:
             metrics,
         )
 
+    @staticmethod
     def _expand_queries(
-            self,
             queries: List[str],
             domains: List[str],
     ) -> List[str]:
@@ -243,8 +244,8 @@ class EvidenceRetriever:
 
         return items
 
+    @staticmethod
     def _merge_evidence(
-            self,
             primary: List[EvidenceItem],
             additional: List[EvidenceItem],
     ) -> List[EvidenceItem]:
@@ -265,7 +266,8 @@ class EvidenceRetriever:
 
         return list(evidence_by_url.values())
 
-    def _deduplicate(self, evidence: List[EvidenceItem]) -> List[EvidenceItem]:
+    @staticmethod
+    def _deduplicate(evidence: List[EvidenceItem]) -> List[EvidenceItem]:
         seen_urls = set()
         unique = []
 
@@ -399,8 +401,8 @@ class ResearchAgent:
 
             return self._create_result(claim, [], metrics)
 
+    @staticmethod
     def _create_result(
-            self,
             claim: Claim,
             evidence: List[EvidenceItem],
             metrics: ResearchMetrics,

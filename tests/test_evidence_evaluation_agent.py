@@ -21,7 +21,7 @@ def valid_evidence():
     }
 
 def test_empty_evidence_returns_default(agent):
-    result = agent.evaluate_evidence("Test claim", [])
+    result = agent.evaluate("Test claim", [])
 
     assert result["retrieval_status"] == "no_evidence"
     assert result["confidence"] == 0.0
@@ -30,7 +30,7 @@ def test_empty_evidence_returns_default(agent):
 
 def test_single_source_evaluation(agent, valid_evidence):
     claim = "The economy grew by 3 percent in 2023."
-    result = agent.evaluate_evidence(claim, [valid_evidence])
+    result = agent.evaluate(claim, [valid_evidence])
 
     assert result["retrieval_status"] in {"ok", "weak_fit"}
     assert len(result["evaluated_sources"]) == 1
@@ -52,7 +52,7 @@ def test_implicit_refutation_triggered(agent):
         "published_date": "2022-01-01",
     }]
 
-    result = agent.evaluate_evidence(claim, evidence)
+    result = agent.evaluate(claim, evidence)
 
     assert result["retrieval_status"] == "weak_fit"
     assert result["consensus_level"] == "likely_false"

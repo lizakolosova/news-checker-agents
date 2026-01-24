@@ -1,5 +1,3 @@
-"""Constants for evidence evaluation system."""
-
 from typing import Tuple
 
 STANCE_LABELS = ("supports", "refutes", "unclear")

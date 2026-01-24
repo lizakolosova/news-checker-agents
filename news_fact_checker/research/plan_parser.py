@@ -38,7 +38,8 @@ class QueryPlanParser:
             )
             raise
 
-    def _clean_content(self, content: str) -> str:
+    @staticmethod
+    def _clean_content(content: str) -> str:
         if not content:
             raise ValueError("Empty content")
 
@@ -58,13 +59,16 @@ class QueryPlanParser:
 
         candidate = re.sub(r'\(\s*"([^"]+)"\s*\)', r'"\1"', candidate)
 
+        candidate = candidate.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
+
         try:
             return json.loads(candidate)
         except json.JSONDecodeError:
             candidate = self._fix_braces(candidate)
             return json.loads(candidate)
 
-    def _fix_braces(self, content: str) -> str:
+    @staticmethod
+    def _fix_braces(content: str) -> str:
         open_braces = content.count("{")
         close_braces = content.count("}")
 
@@ -73,7 +77,8 @@ class QueryPlanParser:
 
         return content
 
-    def _build_plan(self, data: dict) -> QueryPlan:
+    @staticmethod
+    def _build_plan(data: dict) -> QueryPlan:
         plan: QueryPlan = {
             "domain": "unknown",
             "authority_queries": [],
@@ -82,22 +87,40 @@ class QueryPlanParser:
             "strategy": "llm",
         }
 
-        for key in ("domain", "authority_queries", "news_queries", "authoritative_domains"):
-            if key not in data:
-                continue
+        if "domain" in data:
+            plan["domain"] = data["domain"]
 
-            value = data[key]
+        if "authority_queries" in data:
+            value = data["authority_queries"]
+            if not isinstance(value, list):
+                value = [value] if value else []
+            value = [
+                str(item).strip('()"\' ')
+                for item in value
+                if item
+            ]
+            plan["authority_queries"] = value
 
-            if key.endswith("_queries") or key == "authoritative_domains":
-                if not isinstance(value, list):
-                    value = [value] if value else []
+        if "news_queries" in data:
+            value = data["news_queries"]
+            if not isinstance(value, list):
+                value = [value] if value else []
+            value = [
+                str(item).strip('()"\' ')
+                for item in value
+                if item
+            ]
+            plan["news_queries"] = value
 
-                value = [
-                    str(item).strip('()"\' ')
-                    for item in value
-                    if item
-                ]
-
-            plan[key] = value
+        if "authoritative_domains" in data:
+            value = data["authoritative_domains"]
+            if not isinstance(value, list):
+                value = [value] if value else []
+            value = [
+                str(item).strip('()"\' ')
+                for item in value
+                if item
+            ]
+            plan["authoritative_domains"] = value
 
         return plan

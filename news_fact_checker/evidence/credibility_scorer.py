@@ -1,5 +1,3 @@
-"""Domain credibility scoring system."""
-
 from __future__ import annotations
 
 import json

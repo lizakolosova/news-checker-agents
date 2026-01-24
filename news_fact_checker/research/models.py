@@ -16,6 +16,8 @@ class EvidenceItem(TypedDict, total=False):
     source_url: str
     source_title: str
     snippet: str
+    published_date: Optional[str]
+    claim_id: str
     relevance_score: float
     base_relevance: float
     authority_weight: float

@@ -1,5 +1,3 @@
-"""Evidence filtering and relevance scoring."""
-
 from __future__ import annotations
 
 from typing import List, Tuple, Optional

@@ -1,5 +1,3 @@
-"""Authority scoring for sources."""
-
 from __future__ import annotations
 
 from typing import List, Optional

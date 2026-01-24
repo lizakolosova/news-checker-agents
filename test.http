@@ -1,4 +1,4 @@
-### @timeout 120
+### @timeout 1000
 POST http://127.0.0.1:8000/fact-check/article
 Content-Type: application/json
 

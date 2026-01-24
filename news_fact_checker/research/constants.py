@@ -1,5 +1,3 @@
-"""Constants for research system."""
-
 from typing import Tuple
 
 LOW_SIGNAL_DOMAINS: Tuple[str, ...] = (
