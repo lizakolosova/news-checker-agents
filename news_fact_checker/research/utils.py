@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict, Any
 
 from news_fact_checker.claim_extraction.models import Claim, ClaimType
-from news_fact_checker.research.query_builder import generate_queries
+from news_fact_checker.research.query_planner import QueryStrategy
 
 
 def authority_weight(url: str, authoritative_domains: Optional[List[str]] = None) -> float:
@@ -61,7 +61,7 @@ def get_claim_type_str(claim: Claim) -> str:
 
 
 def fallback_query_plan(claim: Claim) -> Dict[str, Any]:
-    base_queries = generate_queries(claim, max_queries=5)
+    base_queries = QueryStrategy.create_fallback_plan(claim, max_queries=5)
     return {
         "domain": "unknown",
         "authority_queries": base_queries,

@@ -69,7 +69,7 @@ def test_render_verdict_no_sources():
         return_value="Insufficient",
     ), patch(
         "news_fact_checker.verdict.agent.generate_explanation",
-        return_value="No evidence available",
+        return_value="No evidence_evaluation available",
     ), patch(
         "news_fact_checker.verdict.agent.extract_key_sources",
         return_value=[],

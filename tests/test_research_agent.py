@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from news_fact_checker.research.agent import ResearchAgent
-from news_fact_checker.research.parsing import parse_llm_response
+from news_fact_checker.research.plan_parser import parse_llm_response
 from news_fact_checker import Claim
 from news_fact_checker.config import ResearchConfig
 
