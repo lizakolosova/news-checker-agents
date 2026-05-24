@@ -1,4 +1,4 @@
-# 🔍 Multi-Agent News Fact-Checker
+# Multi-Agent News Fact-Checker
 
 > A production-ready, AI-powered fact-checking system using a collaborative multi-agent architecture with real-time web search and LLM-based evidence evaluation.
 
@@ -7,10 +7,10 @@
 [![React](https://img.shields.io/badge/React-18.2+-61dafb.svg)](https://reactjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-![Input](img.png)
-![Output](img_1.png)
+![Input](docs/images/input.png)
+![Output](docs/images/output.png)
 
-## 🌟 Features
+## Features
 
 - **Multi-Agent Pipeline**: Four specialized AI agents working collaboratively
 - **Real-Time Web Search**: Powered by Serper API with authority-weighted ranking
@@ -75,7 +75,7 @@ Article Input → Claim Extraction → Evidence Research → Evaluation → Verd
 }
 ```
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────┐
@@ -126,7 +126,7 @@ Article Input → Claim Extraction → Evidence Research → Evaluation → Verd
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/multi-agent-fact-checker.git
+git clone https://github.com/lizakolosova/multi-agent-fact-checker.git
 cd multi-agent-fact-checker
 
 # Create virtual environment
