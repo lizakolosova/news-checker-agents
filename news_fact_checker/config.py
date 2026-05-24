@@ -25,7 +25,6 @@ class ClaimExtractionConfig:
 
 @dataclass
 class ResearchConfig:
-
     max_results: int = 5
     per_query_results: int = 5
     search_api_key: str = os.getenv("SERPER_API_KEY", "")
@@ -73,7 +72,6 @@ class ResearchConfig:
 
 @dataclass
 class EvidenceConfig:
-
     groq_api_key: str = field(default_factory=lambda: os.getenv("GROQ_API_KEY", ""))
 
     domain_weight: float = 0.5
@@ -137,7 +135,7 @@ class EvidenceConfig:
 
     low_credibility_sources: Set[str] = field(default_factory=lambda: {
         'infowars.com', 'naturalnews.com', 'beforeitsnews.com',
-        'quora.com', 'reddit.com',
+        'quora.com', 'reddit.com',  # NEW
     })
 
     def __post_init__(self):
@@ -148,7 +146,6 @@ class EvidenceConfig:
 
 @dataclass
 class VerdictConfig:
-
     true_min_confidence: float = 0.80
     mostly_true_min_confidence: float = 0.65
     mostly_false_min_confidence: float = 0.65

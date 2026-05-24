@@ -140,6 +140,6 @@ def empty_evaluation() -> Dict[str, Any]:
         "consensus_level": "insufficient",
         "evaluated_sources": [],
         "confidence": 0.0,
-        "reasoning": "No evidence sources available for evaluation."
+        "reasoning": "No evidence_evaluation sources available for evaluation."
     }
 
